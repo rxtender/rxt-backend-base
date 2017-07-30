@@ -1,0 +1,2 @@
+include LICENSE.txt
+recursive-include rxt_backend_base *.tpl
