@@ -1,1 +1,1 @@
-export { makeDatasetDriver{%- for item in items %}, {{item.identifier}} {%- endfor %}};
+export { {%- for item in items %}{{item.identifier}}{% if not loop.last %},{% endif%} {%- endfor %} };

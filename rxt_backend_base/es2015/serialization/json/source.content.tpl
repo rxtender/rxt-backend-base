@@ -9,17 +9,19 @@ function {{item.identifier}}({%- for field in item.field %}{{field.identifier}} 
   };
 }
 
-function {{item.identifier}}_deserialize(in_obj_repr):
+function {{item.identifier}}_deserialize(in_obj_repr) {
     in_obj = JSON.parse(in_obj_repr)
-    return {{item.identifier}}({%- for field in item.field %}in_obj.{{field.identifier}}{% if not loop.last %}, {% endif%}{%- endfor %})
+    return {{item.identifier}}({%- for field in item.field %}in_obj.{{field.identifier}}{% if not loop.last %}, {% endif%}{%- endfor %});
+}
 
-function {{item.identifier}}_serialize(in_obj):
-    return JSON.stringify(in_obj)
+function {{item.identifier}}_serialize(in_obj) {
+    return JSON.stringify(in_obj);
+}
 
 {%- endfor %}
 
 function create_message(stream_type) {
-  msg = {
+  let msg = {
     'what': 'create',
     'streamType' : stream_type
   };
@@ -31,7 +33,7 @@ function create_message(stream_type) {
 }
 
 function ack_message(stream_id) {
-  msg = {
+  let msg = {
     'what': 'createAck',
     'streamId' : stream_id
   };
@@ -43,16 +45,17 @@ function ack_message(stream_id) {
 }
 
 function msg_from_json(in_msg_json) {
-    in_msg = JSON.parse(in_msg_json);
-    out_msg = null;
-    what = in_msg.what;
-    if what == 'next' {
-        {%- for stream in streams %}
-        {% if not loop.first %}else {% endif%}if in_msg.streamType == '{{stream.identifier}}':
-            out_msg = next_message('{{stream.identifier}}');
-        {%- endfor %}
-        else:
-            throw 'invalid stream type';
+    const in_msg = JSON.parse(in_msg_json);
+    let out_msg = null;
+    const what = in_msg.what;
+    if(what == 'next') {
+      {%- for stream in streams %}
+      {% if not loop.first %}else {% endif%}if(in_msg.streamType == '{{stream.identifier}}') {
+        out_msg = next_message('{{stream.identifier}}');
+      }
+      {%- endfor %}
+      else
+        throw 'invalid stream type';
     }
     else if(what == 'createAck') {
         out_msg = ack_message(in_msg.streamId);
