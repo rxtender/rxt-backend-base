@@ -1,0 +1,20 @@
+{
+  "name": "rxt-backend-base-test",
+  "version": "0.1.0",
+  "description": "es2015 unit tests",
+  "author": "R. Picard <romain.picard@oakbits.com>",
+  "license": "MIT",
+  "scripts": {
+    "compile": "babel --presets es2015 -d base_type/lib/ base_type/src/",
+    "pretest-base-type": "rxtender --serialization rxt_backend_base.es2015.serialization.json --input-sink base_type/base_type.rxt > base_type/src/base_type.js",
+    "test-base-type": "npm run compile && mocha --compilers js:babel-core/register base_type/",
+    "test": "npm run test-base-type"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.25.0",
+    "babel-preset-es2015": "^6.24.1",
+    "mocha": "^3.5.0"
+  }
+}
