@@ -1,7 +1,7 @@
 import {
   SingleField, SingleField_deserialize, SingleField_serialize,
   MultiFields
-} from './base_type.rxt.js';
+} from './rxt/base_type.rxt.js';
 
 var assert = require('assert');
 
