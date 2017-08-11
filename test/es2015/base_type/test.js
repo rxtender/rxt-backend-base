@@ -86,3 +86,38 @@ describe('deserialization of', function() {
     });
   });
 });
+
+describe('serialization of', function() {
+  describe('SingleField object', function() {
+    it('should return the json encoded string of object', function() {
+      const item = {
+        "foo32": 42
+      };
+      const expectedJson = '{"foo32":42}';
+      let itemJson = SingleField_serialize(item);
+      assert.deepEqual(itemJson, expectedJson);
+    });
+  });
+});
+
+describe('serialization of', function() {
+  describe('SingleField object', function() {
+    it('should fail when object is missing fields', function() {
+      const item = {};
+      let itemJson = SingleField_serialize(item);
+      assert.deepEqual(itemJson, null);
+    });
+  });
+});
+
+describe('serialization of', function() {
+  describe('SingleField object', function() {
+    it('should return json string with only foo32 when object contains additional attributes', function() {
+      const expectedJson = '{"foo32":42}';
+      const item = SingleField(42);
+      item.bar = "some";
+      let itemJson = SingleField_serialize(item);
+      assert.deepEqual(itemJson, expectedJson);
+    });
+  });
+});

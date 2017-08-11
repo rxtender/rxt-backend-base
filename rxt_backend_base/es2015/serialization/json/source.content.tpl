@@ -28,8 +28,13 @@ function {{item.identifier}}_deserialize(in_obj_repr) {
 
 }
 
-function {{item.identifier}}_serialize(in_obj) {
-  return JSON.stringify(in_obj);
+function {{item.identifier}}_serialize(inObj) {
+  {%- for field in item.field %}
+  if(inObj.{{ field.identifier }} == undefined)
+    return null;
+  {%- endfor %}
+
+  return JSON.stringify(inObj, [{%- for field in item.field %}"{{field.identifier}}"{% if not loop.last %}, {% endif%}{%- endfor %}]);
 }
 
 {%- endfor %}
