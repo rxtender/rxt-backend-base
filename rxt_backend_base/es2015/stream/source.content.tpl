@@ -1,13 +1,13 @@
 
-class SinkRouter() {
-  constructor(write_callback) {
-    this.io_write = write_callback;
+class Router {
+  constructor(transport) {
+    this.transport = transport;
     this.observables = [];
     this.id = 0;
   }
 
   delete() {
-    for observable in this.observables:
+    for(observable in this.observables)
       this.observables[observable].delete()
     this.observables = []
   }
@@ -37,7 +37,7 @@ class SinkRouter() {
 {% for stream in streams %}
   create{{stream.identifier}}() {
     const observable = Observable.create(observer => {
-      this.io_write(
+      this.transport.write(
         create_message('{{stream.identifier}}')
         .toJson());
     });
