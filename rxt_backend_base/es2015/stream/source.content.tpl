@@ -1,31 +1,56 @@
 
+{% for stream in streams %}
+
+function create{{stream.identifier}}Subscription(nextCbk, completedCbk, errorCbk) {
+  return {
+    'stream': "{{stream.identifier}}",
+    'args': [],
+    'observer': {
+      'next': (i) => { nextCbk(i); },
+      'completed': () => { completedCbk(); },
+      'error': (e) => {errorCbk(e); }
+    }
+  };
+}
+{% endfor %}
+
 class Router {
   constructor(transport) {
     this.transport = transport;
-    this.observables = [];
+    this.subscriptions = [];
     this.id = 0;
   }
 
   delete() {
-    for(observable in this.observables)
-      this.observables[observable].delete()
-    this.observables = []
+    for(subscription in this.subscriptions)
+      this.subscriptions[subscription].delete()
+    this.subscriptions = []
   }
 
-  addObservable(observable) {
-      const id = self.id++;
-      this.observables[id] = observable;
+  addSubscription(subscription) {
+      const id = this.id++;
+      this.subscriptions[id] = subscription;
+      this.transport.write(
+        createMessage(subscription.stream, id)
+        .toJson());
+  }
+
+  delSubscription(subscription) {
+    const rxtObserver = this.subscriptions.find((e) => { e === subscription });
+    if(rxtObserver != undefined) {
+      this.subscriptions[rxtObserver.id].delete()
+    }
   }
 
   onMessage(msg) {
-    const message = msg_from_json(msg);
+    const message = msgFromJson(msg);
     if(message.what == 'createAck') {
-      //const stream_id = message.stream_id;
     }
     else if(message.what == 'createNack') {
-      const stream_id = message.stream_id;
-      const observable = this.observables[stream_id];
-      observable.error(Error(message.reason));
+      const streamId = message.streamId;
+      const subscription = this.subscriptions[streamId];
+      subscription.observer.error(Error(message.reason));
+      this.delSubscription(subscription);
     }
     else {
       throw 'Invalid message type';
@@ -33,18 +58,4 @@ class Router {
 
   return
   }
-
-{% for stream in streams %}
-  create{{stream.identifier}}() {
-    const observable = Observable.create(observer => {
-      this.transport.write(
-        create_message('{{stream.identifier}}')
-        .toJson());
-    });
-
-    this.add_observable(observable);
-    return observable;
-  }
-{% endfor %}
-
 }

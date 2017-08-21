@@ -39,31 +39,44 @@ function {{item.identifier}}_serialize(inObj) {
 
 {%- endfor %}
 
-function create_message(stream_type) {
+function createMessage(streamType, streamId) {
   let msg = {
     'what': 'create',
-    'streamType' : stream_type
+    'streamType' : streamType,
+    'streamId': streamId
   };
 
   msg.toJson = function() {
-    return JSON.Stringify(msg);
+    return JSON.stringify(msg);
   };
   return msg;
 }
 
-function ack_message(stream_id) {
+function ackMessage(streamId) {
   let msg = {
     'what': 'createAck',
-    'streamId' : stream_id
+    'streamId' : streamId
   };
 
-  msg.to_json = function() {
-    JSON.Stringify(msg);
+  msg.toJson = function() {
+    JSON.stringify(msg);
   };
   return msg;
 }
 
-function msg_from_json(in_msg_json) {
+function nackMessage(streamId) {
+  let msg = {
+    'what': 'createNack',
+    'streamId' : streamId
+  };
+
+  msg.toJson = function() {
+    JSON.stringify(msg);
+  };
+  return msg;
+}
+
+function msgFromJson(in_msg_json) {
   const in_msg = JSON.parse(in_msg_json);
   let out_msg = null;
   const what = in_msg.what;
@@ -71,7 +84,7 @@ function msg_from_json(in_msg_json) {
     {%- if streams %}
     {%- for stream in streams %}
     {% if not loop.first %}else {% endif%}if(in_msg.streamType == '{{stream.identifier}}') {
-      out_msg = next_message('{{stream.identifier}}');
+      out_msg = nextMessage('{{stream.identifier}}');
     }
     {%- endfor %}
     else
@@ -79,8 +92,12 @@ function msg_from_json(in_msg_json) {
     {%- endif %}
   }
   else if(what == 'createAck') {
-    out_msg = ack_message(in_msg.streamId);
+    out_msg = ackMessage(in_msg.streamId);
   }
+  else if(what == 'createNack') {
+    out_msg = nackMessage(in_msg.streamId);
+  }
+
   else {
     throw 'Invalid message type';
   }
