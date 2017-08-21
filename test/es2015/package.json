@@ -8,7 +8,7 @@
     "prebuild:base-type": "rxtender --serialization rxt_backend_base.es2015.serialization.json --input base_type/rxt/base_type.rxt > base_type/rxt/base_type.rxt.es6.js",
     "build:base-type": "babel --presets es2015 base_type/rxt/base_type.rxt.es6.js --out-file base_type/rxt/base_type.rxt.js",
     "test:base-type": "npm run build:base-type && mocha --compilers js:babel-core/register base_type/",
-    "prebuild:base-stream": "rxtender --serialization rxt_backend_base.es2015.serialization.json --stream rxt_backend_base.es2015.stream --input base_stream/rxt/base_stream.rxt > base_stream/rxt/base_stream.rxt.es6.js",
+    "prebuild:base-stream": "rxtender --serialization rxt_backend_base.es2015.serialization.json --stream rxt_backend_base.es2015.stream --stream rxt_backend_base.es2015_rxjs.stream --input base_stream/rxt/base_stream.rxt > base_stream/rxt/base_stream.rxt.es6.js",
     "build:base-stream": "babel --presets es2015 base_stream/rxt/base_stream.rxt.es6.js --out-file base_stream/rxt/base_stream.rxt.js",
     "test:base-stream": "npm run build:base-stream && mocha --compilers js:babel-core/register base_stream/",
     "test": "npm run test:base-type && npm run test:base-stream"
@@ -18,6 +18,7 @@
     "babel-cli": "^6.24.1",
     "babel-core": "^6.25.0",
     "babel-preset-es2015": "^6.24.1",
-    "mocha": "^3.5.0"
+    "mocha": "^3.5.0",
+    "rxjs": "^5.4.3"
   }
 }
