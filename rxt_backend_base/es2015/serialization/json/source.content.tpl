@@ -37,6 +37,24 @@ function {{item.identifier}}_serialize(inObj) {
   return JSON.stringify(inObj, [{%- for field in item.field %}"{{field.identifier}}"{% if not loop.last %}, {% endif%}{%- endfor %}]);
 }
 
+function item{{item.identifier}}Message(obj) {
+  let msg = {
+    'what': 'create',
+    'item' : obj
+  };
+
+  msg.toJson = () => {
+    return JSON.stringify(msg, (k,v) => {
+      switch(k) {
+        case 'what': return v;
+        case 'item': return {{item.identifier}}_serialize(obj);
+      }
+      return undefined;
+    });
+  };
+  return msg;
+}
+
 {%- endfor %}
 
 function createMessage(streamType, streamId) {
@@ -47,7 +65,7 @@ function createMessage(streamType, streamId) {
   };
 
   msg.toJson = function() {
-    return JSON.stringify(msg);
+    return JSON.stringify(msg, ['what', 'streamType', 'streamId']);
   };
   return msg;
 }
@@ -59,7 +77,7 @@ function ackMessage(streamId) {
   };
 
   msg.toJson = function() {
-    JSON.stringify(msg);
+    JSON.stringify(msg, ['what', 'streamId']);
   };
   return msg;
 }
@@ -71,25 +89,59 @@ function nackMessage(streamId) {
   };
 
   msg.toJson = function() {
-    JSON.stringify(msg);
+    JSON.stringify(msg, ['what', 'streamId']);
   };
   return msg;
 }
+
+function nextMessage(streamId, obj) {
+  let msg = {
+    'what': 'next',
+    'streamId': streamId,
+    'item': obj
+  };
+
+  return msg;
+}
+
+function completedMessage(streamId) {
+  let msg = {
+    'what': 'completed',
+    'streamId': streamId
+  };
+
+  msg.toJson = function() {
+    JSON.stringify(msg, ['what', 'streamId']);
+  };
+  return msg;
+}
+
+function errorMessage(streamId, message) {
+  let msg = {
+    'what': 'error',
+    'streamId': streamId,
+    'message': message
+  };
+
+  msg.toJson = function() {
+    JSON.stringify(msg, ['what', 'streamId', 'message']);
+  };
+  return msg;
+}
+
 
 function msgFromJson(in_msg_json) {
   const in_msg = JSON.parse(in_msg_json);
   let out_msg = null;
   const what = in_msg.what;
   if(what == 'next') {
-    {%- if streams %}
-    {%- for stream in streams %}
-    {% if not loop.first %}else {% endif%}if(in_msg.streamType == '{{stream.identifier}}') {
-      out_msg = nextMessage('{{stream.identifier}}');
-    }
-    {%- endfor %}
-    else
-      throw 'invalid stream type';
-    {%- endif %}
+    out_msg = nextMessage(in_msg.streamId, in_msg.item);
+  }
+  else if(what == 'completed') {
+    out_msg = completedMessage(in_msg.streamId);
+  }
+  else if(what == 'error') {
+    out_msg = errorMessage(in_msg.streamId, in_msg.message);
   }
   else if(what == 'createAck') {
     out_msg = ackMessage(in_msg.streamId);

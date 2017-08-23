@@ -44,16 +44,29 @@ class Router {
 
   onMessage(msg) {
     const message = msgFromJson(msg);
-    if(message.what == 'createAck') {
-    }
-    else if(message.what == 'createNack') {
-      const streamId = message.streamId;
-      const subscription = this.subscriptions[streamId];
-      subscription.observer.error(Error(message.reason));
-      this.delSubscription(subscription);
-    }
-    else {
-      throw 'Invalid message type';
+    switch(message.what) {
+      case 'next':
+        this.subscriptions[message.streamId]
+        .observer.next(message.item);
+        break;
+      case 'completed':
+        this.subscriptions[message.streamId]
+        .observer.completed();
+        break;
+      case 'error':
+        this.subscriptions[message.streamId]
+        .observer.error(message.message);
+        break;
+      case 'createAck':
+        break;
+      case 'createNack':
+        const streamId = message.streamId;
+        const subscription = this.subscriptions[streamId];
+        subscription.observer.error(Error(message.reason));
+        this.delSubscription(subscription);
+        break;
+      default:
+        throw 'Invalid message type';
     }
 
   return
