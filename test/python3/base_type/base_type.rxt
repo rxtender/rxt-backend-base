@@ -1,0 +1,13 @@
+item SingleField {
+    foo32 :i32;
+}
+
+item MultiFields {
+    foo32 :i32;
+    bar32 :u32;
+    foo64 :i64;
+    bar64 :u64;
+    biz :bool;
+    buz :double;
+    name :string;
+}

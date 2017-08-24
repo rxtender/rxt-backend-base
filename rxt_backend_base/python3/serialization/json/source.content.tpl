@@ -7,12 +7,12 @@ class {{ item.identifier }}(object):
         {%- endfor %}
 
 
-def {{item.identifier}}_from_json(in_obj_repr):
+def {{item.identifier}}_deserialize(in_obj_repr):
     in_obj = json.loads(in_obj_repr)
     out_obj = {{identifier}}({%- for field in item.field %}in_obj['{{field.identifier}}']{% if not loop.last %}, {% endif%}{%- endfor %})
     return out_obj
 
-def {{item.identifier}}_to_json(in_obj):
+def {{item.identifier}}_serialize(in_obj):
     return json.dumps(in_obj)
 
 {%- endfor %}
@@ -50,14 +50,18 @@ def msg_from_json(in_msg_json):
     in_msg = json.loads(in_msg_json)
     out_msg = None
     what = in_msg['what']
+    '''
     if what == 'create':
+        {% if streams %}
         {%- for stream in streams %}
         {% if not loop.first %}el{% endif%}if in_msg['streamType'] == '{{stream.identifier}}':
             out_msg = CreateMessage('{{stream.identifier}}')
         {%- endfor %}
         else:
             raise InvalidRequest('invalid stream type')
-    elif what == 'delete':
+        {% endif %}
+    '''
+    if what == 'delete':
         out_msg = DeleteMessage(in_msg['streamId'])
     else:
         raise InvalidRequest('Invalid message type')
