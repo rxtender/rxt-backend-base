@@ -94,6 +94,30 @@ function nackMessage(streamId) {
   return msg;
 }
 
+function deleteMessage(streamId) {
+  let msg = {
+    'what': 'delete',
+    'streamId': streamId
+  };
+
+  msg.toJson = function() {
+    return JSON.stringify(msg, ['what', 'streamId']);
+  };
+  return msg;
+}
+
+function deleteAckMessage(streamId) {
+  let msg = {
+    'what': 'deleteAck',
+    'streamId' : streamId
+  };
+
+  msg.toJson = function() {
+    JSON.stringify(msg, ['what', 'streamId']);
+  };
+  return msg;
+}
+
 function nextMessage(streamId, obj) {
   let msg = {
     'what': 'next',
@@ -149,7 +173,9 @@ function msgFromJson(in_msg_json) {
   else if(what == 'createNack') {
     out_msg = nackMessage(in_msg.streamId);
   }
-
+  else if(what == 'deleteAck') {
+    out_msg = deleteAckMessage(in_msg.streamId);
+  }
   else {
     throw 'Invalid message type';
   }

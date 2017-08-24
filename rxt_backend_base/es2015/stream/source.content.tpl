@@ -1,9 +1,12 @@
 
 {% for stream in streams %}
 
+var id = 0;
+
 function create{{stream.identifier}}Subscription(nextCbk, completedCbk, errorCbk) {
   return {
     'stream': "{{stream.identifier}}",
+    'streamId': id++, // @bug: integer overflow
     'args': [],
     'observer': {
       'next': (i) => { nextCbk(i); },
@@ -18,28 +21,28 @@ class Router {
   constructor(transport) {
     this.transport = transport;
     this.subscriptions = [];
-    this.id = 0;
   }
 
   delete() {
     for(subscription in this.subscriptions)
-      this.subscriptions[subscription].delete()
-    this.subscriptions = []
+      delSubscription(this.subscriptions[subscription]);
   }
 
   addSubscription(subscription) {
-      const id = this.id++;
-      this.subscriptions[id] = subscription;
-      this.transport.write(
-        createMessage(subscription.stream, id)
-        .toJson());
+    this.subscriptions[subscription.streamId] = subscription;
+    this.transport.write(
+      createMessage(subscription.stream, subscription.streamId)
+      .toJson());
   }
 
   delSubscription(subscription) {
-    const rxtObserver = this.subscriptions.find((e) => { e === subscription });
-    if(rxtObserver != undefined) {
-      this.subscriptions[rxtObserver.id].delete()
-    }
+    if(typeof this.subscriptions[subscription.streamId] === 'undefined')
+      return;
+
+    this.transport.write(
+      deleteMessage(subscription.streamId)
+      .toJson());
+    this.subscriptions.splice(subscription.streamId, 1);
   }
 
   onMessage(msg) {
@@ -63,7 +66,7 @@ class Router {
         const streamId = message.streamId;
         const subscription = this.subscriptions[streamId];
         subscription.observer.error(Error(message.reason));
-        this.delSubscription(subscription);
+        this.subscriptions.splice(subscription.streamId, 1);
         break;
       default:
         throw 'Invalid message type';

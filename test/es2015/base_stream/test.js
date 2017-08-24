@@ -11,7 +11,7 @@ function createRouter(streamType) {
   let error = [];
   let buffer = "";
   let transport = { "write": function(data) {
-    buffer += data;
+    transport.buffer = data;
   }};
   let router = new Router(transport);
 
@@ -21,17 +21,18 @@ function createRouter(streamType) {
     () => { completed.push(true)},
     (e) => { error.push(e)});
   router.addSubscription(subscription);
-  buffer = "";
 
   // ack creation
-  router.onMessage('{"what": "createAck", "streamId":0}');
+  router.onMessage(
+    '{"what": "createAck", "streamId":' + subscription.streamId + '}');
 
   return {
     'router': router,
-    'buffer': buffer,
     'next': next,
     'completed': completed,
-    'error': error
+    'error': error,
+    'subscription': subscription,
+    'transport': transport
   }
 }
 
@@ -64,12 +65,14 @@ describe('creation of', function() {
       router.addSubscription(subscription);
       assert.equal(
         buffer,
-        '{"what":"create","streamType":"Counter","streamId":0}'
+        '{"what":"create","streamType":"Counter","streamId":'
+        + subscription.streamId + '}'
       );
       buffer = "";
 
       // ack creation
-      router.onMessage('{"what": "createAck", "streamId": 0}');
+      router.onMessage('{"what": "createAck", "streamId": '
+      + subscription.streamId +'}');
 
     });
   });
@@ -95,12 +98,14 @@ describe('creation of', function() {
       router.addSubscription(subscription);
       assert.equal(
         buffer,
-        '{"what":"create","streamType":"Counter","streamId":0}'
+        '{"what":"create","streamType":"Counter","streamId":'
+        + subscription.streamId +'}'
       );
       buffer = "";
 
       // nack creation
-      router.onMessage('{"what": "createNack", "streamId": 0}');
+      router.onMessage('{"what": "createNack", "streamId":'
+      + subscription.streamId +'}');
       assert.equal(error.length, 1);
     });
   });
@@ -111,10 +116,12 @@ describe('processing of', function() {
     it('should call the next callback', function() {
       context = createRouter("Counter");
       context.router.onMessage(
-        '{"what": "next", "streamId":"0", "item": {"value": 42}}'
+        '{"what": "next", "streamId":'
+        + context.subscription.streamId + ', "item": {"value": 42}}'
       );
       context.router.onMessage(
-        '{"what": "next", "streamId":"0", "item": {"value": 142}}'
+        '{"what": "next", "streamId":'
+        + context.subscription.streamId + ', "item": {"value": 142}}'
       );
       assert.equal(context.next.length, 2);
       assert.deepEqual(context.next[0], { value: 42 });
@@ -128,7 +135,8 @@ describe('processing of', function() {
     it('should call the completed callback', function() {
       context = createRouter("Counter");
       context.router.onMessage(
-        '{"what": "completed", "streamId":"0"}'
+        '{"what": "completed", "streamId":'
+        + context.subscription.streamId + '}'
       );
       assert.equal(context.completed.length, 1);
       assert.equal(context.completed[0], true);
@@ -141,10 +149,25 @@ describe('processing of', function() {
     it('should call the error callback', function() {
       context = createRouter("Counter");
       context.router.onMessage(
-        '{"what": "error", "streamId":"0","message":"invalid foo"}'
+        '{"what": "error", "streamId":'
+        + context.subscription.streamId + ',"message":"invalid foo"}'
       );
       assert.equal(context.error.length, 1);
       assert.equal(context.error[0], "invalid foo");
+    });
+  });
+});
+
+describe('deletion of', function() {
+  describe('a subscription', function() {
+    it('should work', function() {
+      context = createRouter("Counter");
+      context.router.delSubscription(context.subscription);
+      assert.equal(
+        context.transport.buffer,
+        '{"what":"delete","streamId":'
+        + context.subscription.streamId +'}'
+      );
     });
   });
 });
