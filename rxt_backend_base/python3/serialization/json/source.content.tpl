@@ -9,11 +9,20 @@ class {{ item.identifier }}(object):
 
 def {{item.identifier}}_deserialize(in_obj_repr):
     in_obj = json.loads(in_obj_repr)
-    out_obj = {{identifier}}({%- for field in item.field %}in_obj['{{field.identifier}}']{% if not loop.last %}, {% endif%}{%- endfor %})
-    return out_obj
+
+    {%- for field in item.field %}
+    if not '{{ field.identifier }}' in in_obj:
+        return None
+    {%- endfor %}
+
+    return {{item.identifier}}({%- for field in item.field %}in_obj['{{field.identifier}}']{% if not loop.last %}, {% endif%}{%- endfor %})
 
 def {{item.identifier}}_serialize(in_obj):
-    return json.dumps(in_obj)
+    return json.dumps({
+        {%- for field in item.field %}
+        '{{ field.identifier }}' : in_obj.{{ field.identifier }}{% if not loop.last %}, {% endif%}
+        {%- endfor %}
+    })
 
 {%- endfor %}
 
