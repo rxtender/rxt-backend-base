@@ -34,5 +34,3 @@ class BaseTypeSerializationTestCase(TestCase):
         item = SingleField(42)
         itemJson = SingleField_serialize(item);
         self.assertEqual(expectedJson, itemJson)
-
-    

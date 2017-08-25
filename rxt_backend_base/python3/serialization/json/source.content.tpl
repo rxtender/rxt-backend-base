@@ -31,9 +31,17 @@ class Message(object):
         self.what = what
 
 class CreateMessage(Message):
-    def __init__(self, stream_type):
+    def __init__(self, stream_type, stream_id):
         super().__init__('create')
         self.stream_type = stream_type
+        self.stream_id = stream_id
+
+    def serialize(self):
+        return json.dumps({
+            'what' : 'create',
+            'streamType': self.stream_type,
+            'streamId': self.stream_id
+        })
 
 class DeleteMessage(Message):
     def __init__(self, stream_id):
@@ -59,23 +67,24 @@ def msg_from_json(in_msg_json):
     in_msg = json.loads(in_msg_json)
     out_msg = None
     what = in_msg['what']
-    '''
     if what == 'create':
-        {% if streams %}
+        {%- if streams %}
         {%- for stream in streams %}
         {% if not loop.first %}el{% endif%}if in_msg['streamType'] == '{{stream.identifier}}':
-            out_msg = CreateMessage('{{stream.identifier}}')
+            out_msg = CreateMessage('{{stream.identifier}}', in_msg['streamId'])
         {%- endfor %}
         else:
             raise InvalidRequest('invalid stream type')
-        {% endif %}
-    '''
-    if what == 'delete':
+        {%- else %}
+        pass
+        {%- endif %}
+    elif what == 'delete':
         out_msg = DeleteMessage(in_msg['streamId'])
-    else:
+
+    if out_msg == None:
         raise InvalidRequest('Invalid message type')
 
-    return out_msg # todo raise exception
+    return out_msg
 
 {%- for stream in streams %}
 
@@ -84,6 +93,7 @@ class {{ stream.identifier }}(object):
         {%- for field in stream.field %}
         self.{{ field.identifier }} = {{ field.identifier }}
         {%- endfor %}
+        return
 
 
 def stream_{{stream.identifier}}_from_json(in_obj_repr):
@@ -92,6 +102,6 @@ def stream_{{stream.identifier}}_from_json(in_obj_repr):
     return out_obj
 
 def stream_{{stream.identifier}}_to_json(in_obj):
-    return = json.dumps(in_obj)
+    return json.dumps(in_obj)
 
 {%- endfor %}
