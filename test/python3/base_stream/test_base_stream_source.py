@@ -12,19 +12,21 @@ class TestTransport(object):
 class TestFactory(object):
     def __init__(self):
         self.created = False
+        self.deleted = False
         self.forward_next = None
         self.forward_completed = None
         self.forward_error = None
         return
 
-    def create_counter_subscription(self, next, completed, error, unsubscribe):
+    def create_counter_subscription(self, next, completed, error):
         self.created = True
         self.forward_next = next
         self.forward_completed = completed
         self.forward_error = error
-        return lambda: self.delete_counter_subscription(73)
+        return lambda: self.delete_counter_subscription()
 
-    def delete_counter_subscription(self, subsciption_id):
+    def delete_counter_subscription(self):
+        self.deleted = True
         return
 
     def next(self, value):
@@ -40,9 +42,7 @@ class TestContext(object):
     def __init__(self, id):
         self.transport = TestTransport()
         self.factory = TestFactory()
-        Router.set_Counter_factory(
-            self.factory.create_counter_subscription,
-            self.factory.delete_counter_subscription)
+        Router.set_Counter_factory(self.factory.create_counter_subscription)
         self.router = Router(self.transport)
         self.router.on_message(
             CreateMessage('Counter', id).serialize())
@@ -53,9 +53,7 @@ class BaseStreamTestCase(TestCase):
     def test_create_stream(self):
         transport = TestTransport()
         factory = TestFactory()
-        Router.set_Counter_factory(
-            factory.create_counter_subscription,
-            factory.delete_counter_subscription)
+        Router.set_Counter_factory(factory.create_counter_subscription)
         router = Router(transport)
         router.on_message(
             CreateMessage('Counter', 42).serialize())

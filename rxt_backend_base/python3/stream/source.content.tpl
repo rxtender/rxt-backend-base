@@ -3,53 +3,44 @@ class RouterError(Exception):
     pass
 
 
-class SourceSubscription(object):
-    def __init__(self, id, factory):
-        if factory == None:
-            raise RouterError('No factory')
+class SourceStream(object):
+    def __init__(self, id, delete):
         self.id = id
-        self.factory = factory
-        self.stream = None
-
-    def set_subscription(self, subscription_id):
-        self.subscription = subscription_id
+        self.delete = None
 
 class Router(object):
     id = 1
-    # Factory functions index
-    CREATE = 0
-    DELETE = 1
     {%- for stream in streams %}
     {{stream.identifier}}_factory = None
     {%- endfor %}
 
     def __init__(self, transport):
         self.transport = transport
-        self.streams = []
+        self.source_streams = {}
         return
 
     def __del__(self):
-        for stream in self.streams:
-            stream.factory[Router.DELETE](stream.stream)
-        streams = None
+        for id,stream in self.source_streams.items():
+            if stream.delete != None:
+                stream.delete()
+        self.source_streams = {}
         return
 
     def write_message(self, message):
         self.transport.write(message.serialize())
 
     {% for stream in streams %}
-    def set_{{stream.identifier}}_factory(create, delete):
-        Router.{{stream.identifier}}_factory = [create, delete]
+    def set_{{stream.identifier}}_factory(create):
+        Router.{{stream.identifier}}_factory = create
 
-    def create_stream_{{stream.identifier}}(self, stream_id):
-        stream = SourceSubscription(stream_id, Router.{{stream.identifier}}_factory)
-        stream.set_subscription(stream.factory[Router.CREATE](
+    def create_stream_{{stream.identifier}}(self, stream_id, factory):
+        delete = factory(
             lambda item: self.{{stream.identifier}}_next(stream, item),
             lambda: self.{{stream.identifier}}_completed(stream),
-            lambda message: self.{{stream.identifier}}_error(stream, message),
-            self.{{stream.identifier}}_unsubscribe
-        ))
-        self.streams.append(stream)
+            lambda message: self.{{stream.identifier}}_error(stream, message)
+        )
+        stream = SourceStream(stream_id, delete)
+        self.source_streams[stream_id] = stream
 
     def {{stream.identifier}}_next(self, subscription, item):
         msg = ItemNextMessage(subscription.id, item)
@@ -63,25 +54,24 @@ class Router(object):
         msg = ItemErrorMessage(subscription.id, message)
         self.write_message(msg)
         return
-    def {{stream.identifier}}_unsubscribe(self, subscription):
-        return
 
     {% endfor %}
 
     def on_create_message(self, message):
         {%- for stream in streams %}
         {% if not loop.first %}el{% endif%}if message.stream_type == '{{stream.identifier}}':
-            self.create_stream_{{stream.identifier}}(message.stream_id)
+            if Router.{{stream.identifier}}_factory == None:
+                raise "no factory for stream {{stream.identifier}}"
+            self.create_stream_{{stream.identifier}}(message.stream_id, Router.{{stream.identifier}}_factory)
         {%- endfor %}
 
 
     def on_delete_message(self, id):
-        for stream in self.streams:
-            if stream.id == id:
-                stream.factory[Router.DELETE].delete(stream.stream)
-                self.streams.remove(stream)
-                break
-        return None
+        if id in self.source_streams:
+            stream = self.source_streams[id]
+            if stream.delete != None:
+                stream.delete()
+            del self.source_streams[id]
 
     def ack_create(self, id):
         msg = CreateAckMessage(id)
