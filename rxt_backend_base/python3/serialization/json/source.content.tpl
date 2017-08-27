@@ -62,6 +62,12 @@ class DeleteMessage(Message):
         super().__init__('delete')
         self.stream_id = stream_id
 
+    def serialize(self):
+        return json.dumps({
+            'what' : 'delete',
+            'streamId': self.stream_id
+        })
+
 
 class CreateAckMessage(Message):
     class JsonEncoder(json.JSONEncoder):

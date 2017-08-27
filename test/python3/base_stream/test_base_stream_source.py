@@ -1,7 +1,7 @@
 from unittest import TestCase
 import json
 
-from .base_stream_rxt import Router, CreateMessage, CounterItem
+from .base_stream_rxt import Router, CreateMessage, DeleteMessage, CounterItem
 
 class TestTransport(object):
     def __init__(self):
@@ -47,7 +47,6 @@ class TestContext(object):
         self.router.on_message(
             CreateMessage('Counter', id).serialize())
 
-
 class BaseStreamTestCase(TestCase):
 
     def test_create_stream(self):
@@ -61,6 +60,12 @@ class BaseStreamTestCase(TestCase):
             json.loads('{"streamId": 42, "what": "createAck"}'),
             json.loads(transport.buffer))
         self.assertEqual(True, factory.created)
+
+    def test_delete(self):
+        context = TestContext(42)
+        context.router.on_message(
+            DeleteMessage(42).serialize())
+        self.assertEqual(True, context.factory.deleted)
 
     def test_next(self):
         context = TestContext(42)

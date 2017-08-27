@@ -6,7 +6,7 @@ class RouterError(Exception):
 class SourceStream(object):
     def __init__(self, id, delete):
         self.id = id
-        self.delete = None
+        self.delete = delete
 
 class Router(object):
     id = 1
