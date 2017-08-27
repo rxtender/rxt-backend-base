@@ -6,6 +6,20 @@ class {{ item.identifier }}(object):
         self.{{ field.identifier }} = {{ field.identifier }}
         {%- endfor %}
 
+    def dict(self):
+        return {
+        {%- for field in item.field %}
+        '{{ field.identifier }}' : self.{{ field.identifier }}{% if not loop.last %},{% endif%}
+        {%- endfor %}
+        }
+
+    def serialize(self):
+        return json.dumps({
+            {%- for field in item.field %}
+            '{{ field.identifier }}' : self.{{ field.identifier }}{% if not loop.last %}, {% endif%}
+            {%- endfor %}
+        })
+
 
 def {{item.identifier}}_deserialize(in_obj_repr):
     in_obj = json.loads(in_obj_repr)
@@ -62,6 +76,53 @@ class CreateAckMessage(Message):
 
     def to_json(self):
         return json.dumps(self, cls=self.JsonEncoder)
+
+class ItemNextMessage(Message):
+    def __init__(self, stream_id, item):
+        super().__init__('item')
+        self.stream_id = stream_id
+        self.item = item
+
+    def dict(self):
+        return {
+            'what' : self.what,
+            'streamId': self.stream_id,
+            'item': self.item.dict()
+        }
+
+    def serialize(self):
+        return json.dumps(self.dict())
+
+class ItemCompletedMessage(Message):
+    def __init__(self, stream_id):
+        super().__init__('completed')
+        self.stream_id = stream_id
+
+    def dict(self):
+        return {
+            'what' : self.what,
+            'streamId': self.stream_id
+        }
+
+    def serialize(self):
+        return json.dumps(self.dict())
+
+class ItemErrorMessage(Message):
+    def __init__(self, stream_id, message):
+        super().__init__('error')
+        self.stream_id = stream_id
+        self.message = message
+
+    def dict(self):
+        return {
+            'what' : self.what,
+            'streamId': self.stream_id,
+            'message': self.message
+        }
+
+    def serialize(self):
+        return json.dumps(self.dict())
+
 
 def msg_from_json(in_msg_json):
     in_msg = json.loads(in_msg_json)

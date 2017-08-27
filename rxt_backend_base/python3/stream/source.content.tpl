@@ -34,6 +34,9 @@ class Router(object):
         streams = None
         return
 
+    def write_message(self, message):
+        self.transport.write(message.serialize())
+
     {% for stream in streams %}
     def set_{{stream.identifier}}_factory(create, delete):
         Router.{{stream.identifier}}_factory = [create, delete]
@@ -41,20 +44,26 @@ class Router(object):
     def create_stream_{{stream.identifier}}(self, stream_id):
         stream = SourceSubscription(stream_id, Router.{{stream.identifier}}_factory)
         stream.set_subscription(stream.factory[Router.CREATE](
-            self.{{stream.identifier}}_next,
-            self.{{stream.identifier}}_completed,
-            self.{{stream.identifier}}_error,
+            lambda item: self.{{stream.identifier}}_next(stream, item),
+            lambda: self.{{stream.identifier}}_completed(stream),
+            lambda message: self.{{stream.identifier}}_error(stream, message),
             self.{{stream.identifier}}_unsubscribe
         ))
         self.streams.append(stream)
 
-    def {{stream.identifier}}_next(subscription, item):
+    def {{stream.identifier}}_next(self, subscription, item):
+        msg = ItemNextMessage(subscription.id, item)
+        self.write_message(msg)
         return
-    def {{stream.identifier}}_completed(subscription):
+    def {{stream.identifier}}_completed(self, subscription):
+        msg = ItemCompletedMessage(subscription.id)
+        self.write_message(msg)
         return
-    def {{stream.identifier}}_error(subscription, message):
+    def {{stream.identifier}}_error(self, subscription, message):
+        msg = ItemErrorMessage(subscription.id, message)
+        self.write_message(msg)
         return
-    def {{stream.identifier}}_unsubscribe(subscription):
+    def {{stream.identifier}}_unsubscribe(self, subscription):
         return
 
     {% endfor %}
