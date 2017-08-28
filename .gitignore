@@ -6,4 +6,6 @@ dist
 node_modules
 *.rxt.*
 *_rxt.py
+*_rxt.js
+*_rxt.es6.js
 .tox
