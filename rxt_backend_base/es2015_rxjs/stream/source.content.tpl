@@ -4,8 +4,8 @@
     const observable = Observable.create(observer => {
       const subscription = create{{stream.identifier}}Subscription(
         (i) => { observer.next(i)},
-        () => { observer.completed()},
-        (e) => { observer.errorCbk(e)}
+        () => { observer.complete()},
+        (e) => { observer.error(e)}
       );
 
       router.addSubscription(subscription);
