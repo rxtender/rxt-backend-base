@@ -37,6 +37,7 @@ class Router(object):
         subscribe, delete = factory()
         stream = SourceStream(stream_id, delete)
         self.source_streams[stream_id] = stream
+        self.ack_create(stream_id)
         subscribe(
             lambda item: self.{{stream.identifier}}_next(stream, item),
             lambda: self.{{stream.identifier}}_completed(stream),
@@ -82,7 +83,6 @@ class Router(object):
         message = msg_from_json(msg)
         if message.what == 'create':
             self.on_create_message(message)
-            self.ack_create(message.stream_id)
         elif message.what == 'delete':
             self.on_delete_message(message.stream_id)
 
