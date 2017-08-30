@@ -39,7 +39,7 @@ describe('creation of', function() {
         "buz": 1.2,
         "name": "baz"
       };
-      let item = MultiFields(1 ,2 ,3 ,4 ,true ,1.2, "baz");
+      let item = MultiFields(1, 2, 3, 4, true, 1.2, "baz");
       assert.deepEqual(item, expectedItem);
     });
   });
@@ -57,9 +57,7 @@ describe('creation of', function() {
 describe('deserialization of', function() {
   describe('SingleField object', function() {
     it('should return the object encoded in the json string', function() {
-      const expectedItem = {
-        "foo32": 42
-      };
+      const expectedItem = SingleField(42);
       const itemJson = '{"foo32": 42}';
       let item = SingleField_deserialize(itemJson);
       assert.deepEqual(item, expectedItem);
@@ -90,9 +88,7 @@ describe('deserialization of', function() {
 describe('serialization of', function() {
   describe('SingleField object', function() {
     it('should return the json encoded string of object', function() {
-      const item = {
-        "foo32": 42
-      };
+      const item = SingleField(42);
       const expectedJson = '{"foo32":42}';
       let itemJson = SingleField_serialize(item);
       assert.deepEqual(itemJson, expectedJson);
