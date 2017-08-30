@@ -9,3 +9,4 @@ node_modules
 *_rxt.js
 *_rxt.es6.js
 .tox
+example/counter/client.js
