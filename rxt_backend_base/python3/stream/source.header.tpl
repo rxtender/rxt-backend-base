@@ -1,0 +1,3 @@
+
+class NoFactory(Exception):
+    pass

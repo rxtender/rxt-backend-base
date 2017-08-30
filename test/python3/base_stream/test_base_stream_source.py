@@ -18,8 +18,11 @@ class TestFactory(object):
         self.forward_error = None
         return
 
-    def create_counter_subscription(self, next, completed, error):
+    def create_counter_stream(self):
         self.created = True
+        return lambda n,c,e: self.subscribe_counter_stream(n, c, e), lambda: self.delete_counter_subscription()
+
+    def subscribe_counter_stream(self, next, completed, error):
         self.forward_next = next
         self.forward_completed = completed
         self.forward_error = error
@@ -42,7 +45,7 @@ class TestContext(object):
     def __init__(self, id):
         self.transport = TestTransport()
         self.factory = TestFactory()
-        Router.set_Counter_factory(self.factory.create_counter_subscription)
+        Router.set_Counter_factory(self.factory.create_counter_stream)
         self.router = Router(self.transport)
         self.router.on_message(
             CreateMessage('Counter', id).serialize())
@@ -52,7 +55,7 @@ class BaseStreamTestCase(TestCase):
     def test_create_stream(self):
         transport = TestTransport()
         factory = TestFactory()
-        Router.set_Counter_factory(factory.create_counter_subscription)
+        Router.set_Counter_factory(factory.create_counter_stream)
         router = Router(transport)
         router.on_message(
             CreateMessage('Counter', 42).serialize())
@@ -71,17 +74,17 @@ class BaseStreamTestCase(TestCase):
         context = TestContext(42)
         context.factory.next(CounterItem(142))
         self.assertEqual(
-            json.loads('{\"streamId\": 42, "item": {"value": 142}, "what": "item"}'),
+            json.loads('{\"streamId\": 42, "item": {"value": 142}, "what": "next"}'),
             json.loads(context.transport.buffer))
 
         context.factory.next(CounterItem(28))
         self.assertEqual(
-            json.loads('{\"streamId\": 42, "item": {"value": 28}, "what": "item"}'),
+            json.loads('{\"streamId\": 42, "item": {"value": 28}, "what": "next"}'),
             json.loads(context.transport.buffer))
 
         context.factory.next(CounterItem(72))
         self.assertEqual(
-            json.loads('{\"streamId\": 42, "item": {"value": 72}, "what": "item"}'),
+            json.loads('{\"streamId\": 42, "item": {"value": 72}, "what": "next"}'),
             json.loads(context.transport.buffer))
 
     def test_completed(self):

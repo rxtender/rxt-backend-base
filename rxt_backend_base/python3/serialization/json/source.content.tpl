@@ -85,7 +85,7 @@ class CreateAckMessage(Message):
 
 class ItemNextMessage(Message):
     def __init__(self, stream_id, item):
-        super().__init__('item')
+        super().__init__('next')
         self.stream_id = stream_id
         self.item = item
 

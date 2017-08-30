@@ -34,13 +34,14 @@ class Router(object):
         Router.{{stream.identifier}}_factory = create
 
     def create_stream_{{stream.identifier}}(self, stream_id, factory):
-        delete = factory(
+        subscribe, delete = factory()
+        stream = SourceStream(stream_id, delete)
+        self.source_streams[stream_id] = stream
+        subscribe(
             lambda item: self.{{stream.identifier}}_next(stream, item),
             lambda: self.{{stream.identifier}}_completed(stream),
             lambda message: self.{{stream.identifier}}_error(stream, message)
         )
-        stream = SourceStream(stream_id, delete)
-        self.source_streams[stream_id] = stream
 
     def {{stream.identifier}}_next(self, subscription, item):
         msg = ItemNextMessage(subscription.id, item)
@@ -61,7 +62,7 @@ class Router(object):
         {%- for stream in streams %}
         {% if not loop.first %}el{% endif%}if message.stream_type == '{{stream.identifier}}':
             if Router.{{stream.identifier}}_factory == None:
-                raise "no factory for stream {{stream.identifier}}"
+                raise NoFactory("no factory for stream {{stream.identifier}}")
             self.create_stream_{{stream.identifier}}(message.stream_id, Router.{{stream.identifier}}_factory)
         {%- endfor %}
 
