@@ -45,16 +45,18 @@ class Message(object):
         self.what = what
 
 class CreateMessage(Message):
-    def __init__(self, stream_type, stream_id):
+    def __init__(self, stream_type, stream_id, args):
         super().__init__('create')
         self.stream_type = stream_type
         self.stream_id = stream_id
+        self.args = args
 
     def serialize(self):
         return json.dumps({
             'what' : 'create',
             'streamType': self.stream_type,
-            'streamId': self.stream_id
+            'streamId': self.stream_id,
+            'args': self.args
         })
 
 class DeleteMessage(Message):
@@ -138,7 +140,7 @@ def msg_from_json(in_msg_json):
         {%- if streams %}
         {%- for stream in streams %}
         {% if not loop.first %}el{% endif%}if in_msg['streamType'] == '{{stream.identifier}}':
-            out_msg = CreateMessage('{{stream.identifier}}', in_msg['streamId'])
+            out_msg = CreateMessage('{{stream.identifier}}', in_msg['streamId'], in_msg['args'])
         {%- endfor %}
         else:
             raise InvalidRequest('invalid stream type')
@@ -156,16 +158,16 @@ def msg_from_json(in_msg_json):
 {%- for stream in streams %}
 
 class {{ stream.identifier }}(object):
-    def __init__(self {%- for field in stream.field %}, {{field.identifier}} {%- endfor %}):
-        {%- for field in stream.field %}
-        self.{{ field.identifier }} = {{ field.identifier }}
+    def __init__(self {%- for arg in stream.arg %}, {{arg.identifier}} {%- endfor %}):
+        {%- for arg in stream.arg %}
+        self.{{ arg.identifier }} = {{ arg.identifier }}
         {%- endfor %}
         return
 
 
 def stream_{{stream.identifier}}_from_json(in_obj_repr):
     in_obj = json.loads(in_obj_repr)
-    out_obj = {{identifier}}({%- for field in stream.field %}in_obj['{{field.identifier}}']{% if not loop.last %}, {% endif%}{%- endfor %})
+    out_obj = {{stream.identifier}}({%- for arg in stream.arg %}in_obj['{{arg.identifier}}']{% if not loop.last %}, {% endif%}{%- endfor %})
     return out_obj
 
 def stream_{{stream.identifier}}_to_json(in_obj):

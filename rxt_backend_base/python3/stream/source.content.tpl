@@ -2,7 +2,6 @@
 class RouterError(Exception):
     pass
 
-
 class SourceStream(object):
     def __init__(self, id, delete):
         self.id = id
@@ -33,8 +32,8 @@ class Router(object):
     def set_{{stream.identifier}}_factory(create):
         Router.{{stream.identifier}}_factory = create
 
-    def create_stream_{{stream.identifier}}(self, stream_id, factory):
-        subscribe, delete = factory()
+    def create_stream_{{stream.identifier}}(self, stream_id, args):
+        subscribe, delete = Router.{{stream.identifier}}_factory({%- for arg in stream.arg %}args[{{loop.index0}}]{% if not loop.last %}, {% endif%}{%- endfor %})
         stream = SourceStream(stream_id, delete)
         self.source_streams[stream_id] = stream
         self.ack_create(stream_id)
@@ -64,7 +63,7 @@ class Router(object):
         {% if not loop.first %}el{% endif%}if message.stream_type == '{{stream.identifier}}':
             if Router.{{stream.identifier}}_factory == None:
                 raise NoFactory("no factory for stream {{stream.identifier}}")
-            self.create_stream_{{stream.identifier}}(message.stream_id, Router.{{stream.identifier}}_factory)
+            self.create_stream_{{stream.identifier}}(message.stream_id, message.args)
         {%- endfor %}
 
 

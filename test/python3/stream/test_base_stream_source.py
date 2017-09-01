@@ -48,7 +48,7 @@ class TestContext(object):
         Router.set_Counter_factory(self.factory.create_counter_stream)
         self.router = Router(self.transport)
         self.router.on_message(
-            CreateMessage('Counter', id).serialize())
+            CreateMessage('Counter', id, []).serialize())
 
 class BaseStreamTestCase(TestCase):
 
@@ -58,7 +58,7 @@ class BaseStreamTestCase(TestCase):
         Router.set_Counter_factory(factory.create_counter_stream)
         router = Router(transport)
         router.on_message(
-            CreateMessage('Counter', 42).serialize())
+            CreateMessage('Counter', 42, []).serialize())
         self.assertEqual(
             json.loads('{"streamId": 42, "what": "createAck"}'),
             json.loads(transport.buffer))
