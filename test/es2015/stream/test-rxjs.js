@@ -1,7 +1,7 @@
 
 import {
   Router, createCounterObservable
-} from './rxt/base_stream.rxt.js';
+} from './base_stream_rxt.js';
 
 describe('creation of', function() {
   describe('Counter observer', function() {

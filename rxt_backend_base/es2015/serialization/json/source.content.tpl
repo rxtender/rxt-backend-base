@@ -57,15 +57,16 @@ function item{{item.identifier}}Message(obj) {
 
 {%- endfor %}
 
-function createMessage(streamType, streamId) {
+function createMessage(streamType, streamId, args) {
   let msg = {
     'what': 'create',
     'streamType' : streamType,
-    'streamId': streamId
+    'streamId': streamId,
+    'args': args
   };
 
   msg.toJson = function() {
-    return JSON.stringify(msg, ['what', 'streamType', 'streamId']);
+    return JSON.stringify(msg, ['what', 'streamType', 'streamId', 'args']);
   };
   return msg;
 }

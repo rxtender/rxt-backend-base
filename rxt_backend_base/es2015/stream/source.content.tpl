@@ -3,11 +3,11 @@
 
 var id = 0;
 
-function create{{stream.identifier}}Subscription(nextCbk, completedCbk, errorCbk) {
+function create{{stream.identifier}}Subscription(args, nextCbk, completedCbk, errorCbk) {
   return {
     'stream': "{{stream.identifier}}",
     'streamId': id++, // @bug: integer overflow
-    'args': [],
+    'args': args,
     'observer': {
       'next': (i) => { nextCbk(i); },
       'completed': () => { completedCbk(); },
@@ -31,7 +31,7 @@ class Router {
   addSubscription(subscription) {
     this.subscriptions[subscription.streamId] = subscription;
     this.transport.write(
-      createMessage(subscription.stream, subscription.streamId)
+      createMessage(subscription.stream, subscription.streamId, subscription.args)
       .toJson());
   }
 

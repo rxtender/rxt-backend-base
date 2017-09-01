@@ -1,7 +1,7 @@
 import {
   Router, Counter, CounterItem,
   createCounterSubscription
-} from './rxt/base_stream.rxt.js';
+} from './base_stream_rxt.js';
 
 var assert = require('assert');
 
@@ -17,6 +17,7 @@ function createRouter(streamType) {
 
   // request creation of a remote observable
   let subscription = createCounterSubscription(
+    [],
     (i) => { next.push(i)},
     () => { completed.push(true)},
     (e) => { error.push(e)});
@@ -59,6 +60,7 @@ describe('creation of', function() {
 
       // request creation of a remote observable
       let subscription = createCounterSubscription(
+        [],
         (i) => { next.push(i)},
         () => { completed.push(true)},
         (e) => { error.push(e)});
@@ -66,7 +68,7 @@ describe('creation of', function() {
       assert.equal(
         buffer,
         '{"what":"create","streamType":"Counter","streamId":'
-        + subscription.streamId + '}'
+        + subscription.streamId + ',"args":[]}'
       );
       buffer = "";
 
@@ -92,6 +94,7 @@ describe('creation of', function() {
 
       // request creation of a remote observable
       let subscription = createCounterSubscription(
+        [],
         (i) => { next.push(i)},
         () => { completed.push(true)},
         (e) => { error.push(e)});
@@ -99,7 +102,7 @@ describe('creation of', function() {
       assert.equal(
         buffer,
         '{"what":"create","streamType":"Counter","streamId":'
-        + subscription.streamId +'}'
+        + subscription.streamId +',"args":[]}'
       );
       buffer = "";
 
