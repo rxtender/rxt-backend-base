@@ -1,7 +1,7 @@
 
 import {
   Router, createCounterObservable
-} from './base_stream_rxt.js';
+} from './arg_stream_rxt.js';
 
 describe('creation of', function() {
   describe('Counter observer', function() {
@@ -15,7 +15,7 @@ describe('creation of', function() {
       }};
       let router = new Router(transport);
 
-      createCounterObservable(router)
+      createCounterObservable(router, 10, 100, 2)
       .subscribe(
         (i) => { next.push(i)},
         () => { completed.push(true)},
