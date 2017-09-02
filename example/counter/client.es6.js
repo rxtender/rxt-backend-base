@@ -19,16 +19,18 @@ client.connect(PORT, HOST, function() {
     }});
 
     console.log('creating observable');
-    createCounterObservable(router)
+    createCounterObservable(router, 1, 10, 1)
     .subscribe(
       (i) => { console.log('tick: ' + i.value); },
       (e) => { console.log('stream error'); },
-      () => { console.log('completed'); }      
+      () => {
+        console.log('completed');
+        process.exit();
+      }
     );
 });
 
 client.on('data', function(data) {
-    console.log('DATA: ' + data);
     const result = unframe(context, data.toString());
     context = result.context;
     result.packets.forEach( (e) => {

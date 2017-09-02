@@ -1,7 +1,7 @@
 {
   "name": "counter-example",
-  "version": "0.1.0",
-  "description": "es2015 rxtender counter example",
+  "version": "0.2.0",
+  "description": "es2015/python3 rxtender counter example",
   "author": "R. Picard <romain.picard@oakbits.com>",
   "license": "MIT",
   "main": "client.js",

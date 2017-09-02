@@ -15,7 +15,7 @@ start python server:
 build javascript client:
 
     npm install
-    npm build
+    npm run build
 
 start javascript client:
 
