@@ -14,12 +14,12 @@ except IOError:
     description = ''
 
 install_requires = [
-    'rxtender>=0.1.0'
+    'rxtender>=0.3.0'
 ]
 
 setup(
     name="rxt-backend-base",
-    version='0.1.0',
+    version='0.2.0',
     url='https://github.com/rxtender/rxt-backend-base',
     license='MIT',
     description="Base backend for RxTender",
