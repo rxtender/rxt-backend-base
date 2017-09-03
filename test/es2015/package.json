@@ -2,7 +2,6 @@
   "name": "rxt-backend-base-test",
   "version": "0.1.0",
   "description": "es2015 unit tests",
-  "author": "R. Picard <romain.picard@oakbits.com>",
   "license": "MIT",
   "scripts": {
     "prebuild:base-type": "rxtender --serialization rxt_backend_base.es2015.serialization.json --input base_type/rxt/base_type.rxt > base_type/rxt/base_type.rxt.es6.js",
