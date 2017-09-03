@@ -8,5 +8,6 @@ node_modules
 *_rxt.py
 *_rxt.js
 *_rxt.es6.js
+npm-debug.log
 .tox
 example/counter/client.js
