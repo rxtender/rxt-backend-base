@@ -1,6 +1,6 @@
 import asyncio
 
-from rx import Observable, Observer
+from rx import Observable
 from counter_rxt import frame, unframe, Router, CounterItem
 
 class FramedTransport(object):
@@ -14,7 +14,6 @@ class CounterServerProtocol(asyncio.Protocol):
     def connection_made(self, transport):
         peername = transport.get_extra_info('peername')
         print('Connection from {}'.format(peername))
-        self.transport = transport
         self.router = Router(FramedTransport(transport))
         self.frame_context = ''
 
