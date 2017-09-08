@@ -1,43 +1,43 @@
 
-{%- for item in items %}
+{%- for struct in structs %}
 
-function {{item.identifier}}({%- for field in item.field %}{{field.identifier}} {% if not loop.last %},{% endif%} {%- endfor %}) {
+function {{struct.identifier}}({%- for field in struct.field %}{{field.identifier}} {% if not loop.last %},{% endif%} {%- endfor %}) {
   const args = Array.from(arguments);
-  if(args.length != {{item.field|length}})
+  if(args.length != {{struct.field|length}})
     throw new Error('bad number of argument');
   return {
-  {%- for field in item.field %}
+  {%- for field in struct.field %}
     "{{ field.identifier }}": {{ field.identifier }}{% if not loop.last %},{% endif%}
   {%- endfor %}
   };
 }
 
-function {{item.identifier}}_deserialize(in_obj_repr) {
+function {{struct.identifier}}_deserialize(in_obj_repr) {
   try {
     const inObj = JSON.parse(in_obj_repr)
 
-    {%- for field in item.field %}
+    {%- for field in struct.field %}
     if(inObj.{{ field.identifier }} == undefined)
       return null;
     {%- endfor %}
 
-    return {{item.identifier}}({%- for field in item.field %}inObj.{{field.identifier}}{% if not loop.last %}, {% endif%}{%- endfor %});
+    return {{struct.identifier}}({%- for field in struct.field %}inObj.{{field.identifier}}{% if not loop.last %}, {% endif%}{%- endfor %});
   } catch(e) {
     return null;
   }
 
 }
 
-function {{item.identifier}}_serialize(inObj) {
-  {%- for field in item.field %}
+function {{struct.identifier}}_serialize(inObj) {
+  {%- for field in struct.field %}
   if(inObj.{{ field.identifier }} == undefined)
     return null;
   {%- endfor %}
 
-  return JSON.stringify(inObj, [{%- for field in item.field %}"{{field.identifier}}"{% if not loop.last %}, {% endif%}{%- endfor %}]);
+  return JSON.stringify(inObj, [{%- for field in struct.field %}"{{field.identifier}}"{% if not loop.last %}, {% endif%}{%- endfor %}]);
 }
 
-function item{{item.identifier}}Message(obj) {
+function {{struct.identifier}}Message(obj) {
   let msg = {
     'what': 'create',
     'item' : obj
@@ -47,7 +47,7 @@ function item{{item.identifier}}Message(obj) {
     return JSON.stringify(msg, (k,v) => {
       switch(k) {
         case 'what': return v;
-        case 'item': return {{item.identifier}}_serialize(obj);
+        case 'item': return {{struct.identifier}}_serialize(obj);
       }
       return undefined;
     });

@@ -1,39 +1,39 @@
-{%- for item in items %}
+{%- for struct in structs %}
 
-class {{ item.identifier }}(object):
-    def __init__(self {%- for field in item.field %}, {{field.identifier}} {%- endfor %}):
-        {%- for field in item.field %}
+class {{ struct.identifier }}(object):
+    def __init__(self {%- for field in struct.field %}, {{field.identifier}} {%- endfor %}):
+        {%- for field in struct.field %}
         self.{{ field.identifier }} = {{ field.identifier }}
         {%- endfor %}
 
     def dict(self):
         return {
-        {%- for field in item.field %}
+        {%- for field in struct.field %}
         '{{ field.identifier }}' : self.{{ field.identifier }}{% if not loop.last %},{% endif%}
         {%- endfor %}
         }
 
     def serialize(self):
         return json.dumps({
-            {%- for field in item.field %}
+            {%- for field in struct.field %}
             '{{ field.identifier }}' : self.{{ field.identifier }}{% if not loop.last %}, {% endif%}
             {%- endfor %}
         })
 
 
-def {{item.identifier}}_deserialize(in_obj_repr):
+def {{struct.identifier}}_deserialize(in_obj_repr):
     in_obj = json.loads(in_obj_repr)
 
-    {%- for field in item.field %}
+    {%- for field in struct.field %}
     if not '{{ field.identifier }}' in in_obj:
         return None
     {%- endfor %}
 
-    return {{item.identifier}}({%- for field in item.field %}in_obj['{{field.identifier}}']{% if not loop.last %}, {% endif%}{%- endfor %})
+    return {{struct.identifier}}({%- for field in struct.field %}in_obj['{{field.identifier}}']{% if not loop.last %}, {% endif%}{%- endfor %})
 
-def {{item.identifier}}_serialize(in_obj):
+def {{struct.identifier}}_serialize(in_obj):
     return json.dumps({
-        {%- for field in item.field %}
+        {%- for field in struct.field %}
         '{{ field.identifier }}' : in_obj.{{ field.identifier }}{% if not loop.last %}, {% endif%}
         {%- endfor %}
     })

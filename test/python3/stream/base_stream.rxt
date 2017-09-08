@@ -1,5 +1,9 @@
-item CounterItem {
+struct CounterItem {
     value :i32;
 }
 
-stream Counter() -> CounterItem;
+struct CounterError {
+    message :string;
+}
+
+stream Counter() -> Stream<CounterItem, CounterError>;

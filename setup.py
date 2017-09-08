@@ -14,7 +14,7 @@ except IOError:
     description = ''
 
 install_requires = [
-    'rxtender>=0.3.0'
+    'rxtender>=0.4.0'
 ]
 
 setup(

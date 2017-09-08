@@ -1,8 +1,8 @@
-item SingleField {
+struct SingleField {
     foo32 :i32;
 }
 
-item MultiFields {
+struct MultiFields {
     foo32 :i32;
     bar32 :u32;
     foo64 :i64;
