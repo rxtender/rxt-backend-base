@@ -4,17 +4,17 @@
   "description": "es2015 unit tests",
   "license": "MIT",
   "scripts": {
-    "prebuild:base-type": "rxtender --serialization rxt_backend_base.es2015.serialization.json --input base_type/rxt/base_type.rxt > base_type/rxt/base_type.rxt.es6.js",
+    "prebuild:base-type": "rxtender --serialization rxt_backend_base.es2015.serialization.json --input base_type/rxt/base_type.rxt --output base_type/rxt/base_type.rxt.es6.js",
     "build:base-type": "babel --presets es2015 base_type/rxt/base_type.rxt.es6.js --out-file base_type/rxt/base_type.rxt.js",
     "test:base-type": "npm run build:base-type && mocha --compilers js:babel-core/register base_type/",
 
-    "prebuild:base_stream": "rxtender --serialization rxt_backend_base.es2015.serialization.json --stream rxt_backend_base.es2015.stream --stream rxt_backend_base.es2015_rxjs.stream --input stream/base_stream.rxt > stream/base_stream_rxt.es6.js",
+    "prebuild:base_stream": "rxtender --serialization rxt_backend_base.es2015.serialization.json --stream rxt_backend_base.es2015.stream --stream rxt_backend_base.es2015_rxjs.stream --input stream/base_stream.rxt --output stream/base_stream_rxt.es6.js",
     "build:base_stream": "babel --presets es2015 stream/base_stream_rxt.es6.js --out-file stream/base_stream_rxt.js",
-    "prebuild:arg_stream": "rxtender --serialization rxt_backend_base.es2015.serialization.json --stream rxt_backend_base.es2015.stream --stream rxt_backend_base.es2015_rxjs.stream --input stream/arg_stream.rxt > stream/arg_stream_rxt.es6.js",
+    "prebuild:arg_stream": "rxtender --serialization rxt_backend_base.es2015.serialization.json --stream rxt_backend_base.es2015.stream --stream rxt_backend_base.es2015_rxjs.stream --input stream/arg_stream.rxt --output stream/arg_stream_rxt.es6.js",
     "build:arg_stream": "babel --presets es2015 stream/arg_stream_rxt.es6.js --out-file stream/arg_stream_rxt.js",
     "test:stream": "npm run build:base_stream && npm run build:arg_stream &&mocha --compilers js:babel-core/register stream/",
 
-    "prebuild:framing": "rxtender --framing rxt_backend_base.es2015.framing.newline --input framing/dummy_type.rxt > framing/dummy_type_rxt.es6.js",
+    "prebuild:framing": "rxtender --framing rxt_backend_base.es2015.framing.newline --input framing/dummy_type.rxt --output framing/dummy_type_rxt.es6.js",
     "build:framing": "babel --presets es2015 framing/dummy_type_rxt.es6.js --out-file framing/dummy_type_rxt.js",
     "test:framing": "npm run build:framing && mocha --compilers js:babel-core/register framing/",
 

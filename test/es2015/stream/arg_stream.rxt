@@ -2,4 +2,8 @@ item CounterItem {
     value :i32;
 }
 
-stream Counter(start: i32, end: i32, step: i32) -> CounterItem;
+struct CounterError {
+    message :string;
+}
+
+stream Counter(start: i32, end: i32, step: i32) -> Stream<CounterItem, CounterError>;
