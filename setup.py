@@ -19,7 +19,7 @@ install_requires = [
 
 setup(
     name="rxt-backend-base",
-    version='0.2.0',
+    version='0.3.0',
     url='https://github.com/rxtender/rxt-backend-base',
     license='MIT',
     description="Base backend for RxTender",
