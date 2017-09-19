@@ -141,11 +141,11 @@ function completedMessage(streamId) {
   return msg;
 }
 
-function errorMessage(streamId, message) {
+function errorMessage(streamId, obj) {
   let msg = {
     'what': 'error',
     'streamId': streamId,
-    'message': message
+    'error': obj
   };
 
   msg.toJson = function() {
@@ -154,6 +154,21 @@ function errorMessage(streamId, message) {
   return msg;
 }
 
+function createSinkMessage(streamType, observer, args) {
+  return {
+    'what': 'createSink',
+    'streamType' : streamType,
+    'observer': observer,
+    'args': args
+  };
+}
+
+function deleteSinkMessage(observer) {
+  return {
+    'what': 'deleteSink',
+    'observer': observer
+  };
+}
 
 function msgFromJson(in_msg_json) {
   const in_msg = JSON.parse(in_msg_json);
