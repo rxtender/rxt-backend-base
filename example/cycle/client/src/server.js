@@ -4,9 +4,7 @@ import {makeTcpServerDriver} from './tcpserver_driver.js';
 import {makeConsoleDriver} from './console_driver.js';
 import {makeRouterDriver} from './router_driver.js';
 
-import {
-  frame, unframe, router
-} from './counter_rxt.js';
+import {router} from './counter_rxt.js';
 
 let dispose;
 
@@ -54,9 +52,12 @@ function main(sources) {
   const returnChannel$ = sources.ROUTER.linkout()
     .map(router2server);
 
+  const console$ = Observable.merge(
+    sources.ROUTER.streamFactory());
+
   return {
     ROUTER: linkIn$,
-    CONSOLE: linkIn$,
+    CONSOLE: console$,
     LINK: returnChannel$
   };
 }

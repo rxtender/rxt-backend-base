@@ -11,24 +11,16 @@ import {
 let dispose;
 
 function main(sources) {
-  const connection = sources.LINK.connect('localhost', 9999);
-  const returnChannel$ = sources.ROUTER.linkout()
-    .map(i => i.data);
+  const linkRcv$ = sources.LINK.connect('counter', 'localhost', 9999);
 
-  const linkRcv$ = connection.data
+  const returnChannel$ = sources.ROUTER.linkData();
+
+  const console$ = sources.ROUTER.link()
     .map( i => {
-      return {
-        "what": "data",
-        "link": "foo",
-        "data": i
-      };
-    });
-
-  const console$ = connection.state
-    .mergeMap( i => {
-      return sources.ROUTER.Counter(1,10,1);
+      return sources.ROUTER.Counter(i.linkId, 1,10,1)
     })
-    .map( i => i.value);
+    .mergeAll()
+    .map( i => i.value);;
 
   return {
    ROUTER: linkRcv$,

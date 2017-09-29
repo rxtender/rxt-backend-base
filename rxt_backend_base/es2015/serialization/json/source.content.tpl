@@ -154,21 +154,31 @@ function errorMessage(streamId, obj) {
   return msg;
 }
 
-function createSinkMessage(streamType, observer, args) {
+function createSinkMessage(linkId, streamType, observer, args) {
   return {
     'what': 'createSink',
+    'linkId': linkId,
     'streamType' : streamType,
     'observer': observer,
     'args': args
   };
 }
 
-function deleteSinkMessage(observer) {
+function deleteSinkMessage(linkId, observer) {
   return {
     'what': 'deleteSink',
+    'linkId': linkId,
     'observer': observer
   };
 }
+
+function addLinkMessage(linkId) {
+  return {
+    'what': 'addLink',
+    'linkId' : linkId
+  };
+}
+
 
 function msgFromJson(in_msg_json) {
   const in_msg = JSON.parse(in_msg_json);
@@ -182,6 +192,9 @@ function msgFromJson(in_msg_json) {
   }
   else if(what == 'error') {
     out_msg = errorMessage(in_msg.streamId, in_msg.message);
+  }
+  else if(what == 'create') {
+    out_msg = createMessage(in_msg.streamType, in_msg.streamId, in_msg.args);
   }
   else if(what == 'createAck') {
     out_msg = ackMessage(in_msg.streamId);

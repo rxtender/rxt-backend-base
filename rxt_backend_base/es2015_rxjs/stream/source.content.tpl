@@ -17,59 +17,102 @@
   }
 {% endfor %}
 
-var id = 0;
+var streamId = 0;
 
 function sinkStream(observer) {
   return {
-    "streamId": id++, // @bug: integer overflow
+    "streamId": streamId++, // @bug: integer overflow
     "observer": observer
   };
 }
 
 function sinkEngine() {
   return {
-    "sinkStreams": [],
-    "packet": null
+    "link": [],
+    "message": null
   };
 }
 
 function processSinkItem(state, item) {
-  state.packet = null;
+  state.message = null;
   switch(item.what) {
     case 'createSink':
       const stream = sinkStream(item.observer);
-      state.sinkStreams[stream.streamId] = stream;
-      state.packet = createMessage(item.streamType, stream.streamId, item.args);
+      state.link[item.linkId][stream.streamId] = stream;
+      state.message = createMessage(item.streamType, stream.streamId, item.args);
+      state.message.linkId = item.linkId;
     break;
 
     case 'deleteSink':
-      const index = state.sinkStreams.indexOf(item.observer);
+      const index = state.link[item.linkId].indexOf(item.observer);
       if(index != -1) {
-        state.sinkStreams.splice(index, 1);
-        state.packet = deleteMessage(index);
+        state.link[item.linkId].splice(index, 1);
+        state.message = deleteMessage(index);
+        state.message.linkId = item.linkId;
       }
     break;
 
     case 'next':
-      state.sinkStreams[item.streamId]
+      state.link[item.linkId][item.streamId]
         .observer.next(item.item);
       break;
 
     case 'completed':
-      state.sinkStreams[item.streamId]
+      state.link[item.linkId][item.streamId]
         .observer.complete();
       break;
 
     case 'error':
-      state.sinkStreams[item.streamId]
+      state.link[item.linkId][item.streamId]
         .observer.error(item.error);
       break;
+
+    case 'addLink':
+      state.link[item.linkId] = [];
+      state.message = addLinkMessage(item.linkId);
+      break;
+
+    case 'delLink':
+      // todo: raise error on all streams
+      state.link[item.linkId].splice(item.linkId, 1);
+      break;
+
+    /*
+    case 'create':
+      state.message = item;
+      break;
+
+    case 'delete':
+      break;
+    */
   }
   return state;
 }
 
-export function router(linkIn$) {
-  let sinkStreams = [];
+function remuxLinkStreams(link$) {
+  return link$.map( i => {
+    return i.stream.map( data => {
+      return {
+        "what": "data",
+        "linkId" : i.linkId,
+        "data": data
+      };
+    })
+    .startWith({
+      "what": "addLink",
+      "linkId": i.linkId
+    })
+    .concat(
+      Observable.from([{
+        "what": "delLink",
+        "linkId": i.linkId
+      }])
+    );
+  })
+  .mergeAll();
+}
+
+export function router(sink$) {
   let sinkRequestObserver = null;
 
   const sinkRequest$ = Observable.create( o => {
@@ -78,46 +121,65 @@ export function router(linkIn$) {
     // todo cleanup function
   });
 
-  const sinkControl = linkIn$.partition( i => i.what == "data");
+  const sinkControl = remuxLinkStreams(sink$)
+    .partition( i => i.what == "data");
   const sinkinData$ = sinkControl[0].scan( (acc, i) => {
-     return unframe(acc.context, i.data);
+     const state = unframe(acc.context, i.data)
+     return {
+       "context": state.context,
+       "packets": state.packets,
+       "linkId": i.linkId
+     };
    }, {'context':''})
    .mergeMap( (i) => {
-     return Observable.from(i.packets);
+     return Observable.from(i.packets)
+      .map( packet => {
+        return {
+          "packet": packet,
+          "linkId": i.linkId
+        };
+      });
    })
   .map( i => {
-    return msgFromJson(i);
+    let msg = msgFromJson(i.packet);
+    msg.linkId = i.linkId;
+    return msg;
   });
   const sinkinCommand$ = sinkControl[1];
 
-  const sinkOut$ = Observable.merge(sinkinCommand$, sinkinData$, sinkRequest$)
+  const engine$ = Observable.merge(sinkinCommand$, sinkinData$, sinkRequest$)
     .scan( (acc, i) => {
       return processSinkItem(acc, i);
     }, sinkEngine())
-    .map( i => i.packet)
+    .map( i => i.message)
     .filter(i => i != null);
 
-  const linkOut$ = Observable.merge(sinkOut$)
-    .map( i => i.toJson())
-    .map( i => frame(i) )
+  const engine = engine$.share().partition( i => i.what === "addLink");
+
+  const link$ = engine[0];
+  const linkOut$ = engine[1]
     .map( i => {
       return {
         "what": "data",
-        "data": i
-      }
-    });
+        "linkId": i.linkId,
+        "data": frame(i.toJson())
+      };
+    })
 
   return {
-    "linkout": () => {
+    "link": () => link$,
+    "linkData": () => {
       return linkOut$;
     }
+
     {%- for stream in streams %}
     {%- if loop.first %}, {% endif%}
 
-    "{{stream.identifier}}": ({%- for arg in stream.arg %}{{arg.identifier}}{% if not loop.last %}, {% endif%}{%- endfor %}) => {
+    "{{stream.identifier}}": (linkId, {%- for arg in stream.arg %}{{arg.identifier}}{% if not loop.last %}, {% endif%}{%- endfor %}) => {
       const stream = Observable.create( o => {
         sinkRequestObserver.next(
           createSinkMessage(
+            linkId,
             "{{stream.identifier}}",
             o,
             [{%- for arg in stream.arg %}{{arg.identifier}}{% if not loop.last %}, {% endif%}{%- endfor %}]
@@ -126,7 +188,7 @@ export function router(linkIn$) {
 
         return () => {
           sinkRequestObserver.next(
-            deleteSinkMessage(o));
+            deleteSinkMessage(linkId, o));
           };
         }
       );

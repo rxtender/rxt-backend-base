@@ -7,6 +7,7 @@ export function makeTcpServerDriver() {
   function listen(host, port) {
     const server$ = Observable.create(observer => {
       createServer(function(sock) {
+        sock.setEncoding('utf8');
         console.log('CONNECTED: ' + sock.remoteAddress +':'+ sock.remotePort);
         observer.next({"what": "accept", "socket": sock});
 
@@ -28,7 +29,7 @@ export function makeTcpServerDriver() {
   return function TcpServerDriver(sink$) {
     console.log("created TcpServerDriver: " + sink$);
     sink$.subscribe( (i) => {
-      console.log('TcpServerDriver next: ' + i);
+      console.log('TcpServerDriver next: ' + JSON.stringify(i));
       i.socket.write(i.data);
     });
 

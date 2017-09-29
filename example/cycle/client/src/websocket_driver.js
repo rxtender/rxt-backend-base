@@ -4,47 +4,42 @@ import {Socket} from 'net';
 //var net = require('net');
 
 function makeWebsocketDriver() {
-  let connection = null;
+  let connection = [];
 
-  function createConnection(host, port) {
-    let stateObserver = null;
+  function createConnection(id, host, port) {
+    const state$ = Observable.create(stateObserver => {
+      let dataObserver = null;
+      const data$ = Observable.create(observer => {
+        dataObserver = observer;
+      });
 
-    const state$ = Observable.create(observer => {
-      console.log('createConnection state$ subscribed');
-      stateObserver = observer;
-    });
-
-    const data$ = Observable.create(observer => {
-      console.log('createConnection data$ subscribed');
-      connection = new Socket();
-      connection.setEncoding('utf8');
-      connection.connect(port, host, function() {
+      connection[id] = new Socket();
+      connection[id].setEncoding('utf8');
+      connection[id].connect(port, host, function() {
           console.log('CONNECTED TO: ' + host + ':' + port);
-          stateObserver.next(true);
+          stateObserver.next({
+            "linkId": id,
+            "stream": data$
+          })
       });
 
-      connection.on('data', function(data) {
-        observer.next(data);
+      connection[id].on('data', function(data) {
+        dataObserver.next(data);
       });
 
-      connection.on('close', function() {
-          observer.complete();
+      connection[id].on('close', function() {
+          dataObserver.complete();
           stateObserver.complete();
+          connection.splice(id, 1);
       });
     });
 
-
-    return {
-      data: data$,
-      state: state$
-    };
+    return state$;
   }
 
   return function WebsocketDriver(sink$) {
-    console.log("created WebsocketDriver: " + sink$);
     sink$.subscribe( (i) => {
-      console.log('WebsocketDriver next: ' + i);
-      connection.write(i);
+      connection[i.linkId].write(i.data);
     });
 
     return {
