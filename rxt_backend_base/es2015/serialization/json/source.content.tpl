@@ -71,26 +71,26 @@ function createMessage(streamType, streamId, args) {
   return msg;
 }
 
-function ackMessage(streamId) {
+export function ackMessage(streamId) {
   let msg = {
     'what': 'createAck',
     'streamId' : streamId
   };
 
   msg.toJson = function() {
-    JSON.stringify(msg, ['what', 'streamId']);
+    return JSON.stringify(msg, ['what', 'streamId']);
   };
   return msg;
 }
 
-function nackMessage(streamId) {
+export function nackMessage(streamId) {
   let msg = {
     'what': 'createNack',
     'streamId' : streamId
   };
 
   msg.toJson = function() {
-    JSON.stringify(msg, ['what', 'streamId']);
+    return JSON.stringify(msg, ['what', 'streamId']);
   };
   return msg;
 }
@@ -114,7 +114,7 @@ function deleteAckMessage(streamId) {
   };
 
   msg.toJson = function() {
-    JSON.stringify(msg, ['what', 'streamId']);
+    return JSON.stringify(msg, ['what', 'streamId']);
   };
   return msg;
 }
@@ -136,7 +136,7 @@ function completedMessage(streamId) {
   };
 
   msg.toJson = function() {
-    JSON.stringify(msg, ['what', 'streamId']);
+    return JSON.stringify(msg, ['what', 'streamId']);
   };
   return msg;
 }
@@ -149,7 +149,7 @@ function errorMessage(streamId, obj) {
   };
 
   msg.toJson = function() {
-    JSON.stringify(msg, ['what', 'streamId', 'message']);
+    return JSON.stringify(msg, ['what', 'streamId', 'message']);
   };
   return msg;
 }
@@ -175,6 +175,13 @@ function deleteSinkMessage(linkId, observer) {
 function addLinkMessage(linkId) {
   return {
     'what': 'addLink',
+    'linkId' : linkId
+  };
+}
+
+function delLinkMessage(linkId) {
+  return {
+    'what': 'delLink',
     'linkId' : linkId
   };
 }

@@ -44,13 +44,26 @@ function processSinkItem(state, item) {
     break;
 
     case 'deleteSink':
-      const index = state.link[item.linkId].indexOf(item.observer);
+      let index = -1;
+      for(let id in state.link[item.linkId]) {
+        if(state.link[item.linkId][id].observer == item.observer) {
+          index = id;
+          break;
+        }
+      }
+
       if(index != -1) {
         state.link[item.linkId].splice(index, 1);
         state.message = deleteMessage(index);
         state.message.linkId = item.linkId;
       }
     break;
+
+    case 'createNack':
+      state.link[item.linkId][item.streamId]
+        .observer.error(null);
+      state.link[item.linkId].splice(item.streamId, 1);
+      break;
 
     case 'next':
       state.link[item.linkId][item.streamId]
@@ -74,42 +87,36 @@ function processSinkItem(state, item) {
 
     case 'delLink':
       // todo: raise error on all streams
-      state.link[item.linkId].splice(item.linkId, 1);
+      state.link.splice(item.linkId, 1);
+      state.message = delLinkMessage(item.linkId);
       break;
-
-    /*
-    case 'create':
-      state.message = item;
-      break;
-
-    case 'delete':
-      break;
-    */
   }
   return state;
 }
 
 function remuxLinkStreams(link$) {
   return link$.map( i => {
-    return i.stream.map( data => {
-      return {
-        "what": "data",
-        "linkId" : i.linkId,
-        "data": data
-      };
-    })
-    .startWith({
+    return Observable.from([{
       "what": "addLink",
       "linkId": i.linkId
-    })
+    }])
     .concat(
+      i.stream.map( data => {
+        return {
+          "what": "data",
+          "linkId" : i.linkId,
+          "data": data
+        };
+      }),
       Observable.from([{
         "what": "delLink",
         "linkId": i.linkId
       }])
     );
   })
-  .mergeAll();
+  .mergeAll()
+  //.do( i => console.log(JSON.stringify(i)))
+  ;
 }
 
 export function router(sink$) {
@@ -122,6 +129,7 @@ export function router(sink$) {
   });
 
   const sinkControl = remuxLinkStreams(sink$)
+    .share()
     .partition( i => i.what == "data");
   const sinkinData$ = sinkControl[0].scan( (acc, i) => {
      const state = unframe(acc.context, i.data)
@@ -154,7 +162,8 @@ export function router(sink$) {
     .map( i => i.message)
     .filter(i => i != null);
 
-  const engine = engine$.share().partition( i => i.what === "addLink");
+  const engine = engine$.share()
+    .partition( i => (i.what === "addLink") || (i.what === "delLink"));
 
   const link$ = engine[0];
   const linkOut$ = engine[1]

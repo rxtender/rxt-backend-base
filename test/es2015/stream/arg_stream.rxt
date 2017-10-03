@@ -1,4 +1,4 @@
-item CounterItem {
+struct CounterItem {
     value :i32;
 }
 
