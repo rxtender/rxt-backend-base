@@ -57,7 +57,7 @@ function {{struct.identifier}}Message(obj) {
 
 {%- endfor %}
 
-function createMessage(streamType, streamId, args) {
+export function createMessage(streamType, streamId, args) {
   let msg = {
     'what': 'create',
     'streamType' : streamType,
