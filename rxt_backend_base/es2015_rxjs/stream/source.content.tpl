@@ -49,27 +49,24 @@ function linkMessage(linkId, message) {
 }
 
 function processLinkItem(state, item, linkObserver) {
-  state.message = null;
   switch(item.what) {
     case 'addLink':
       state.link[item.linkId] = [];
-      state.message = addLinkMessage(item.linkId);
+      if(linkObserver != null)
+        linkObserver.next(addLinkMessage(item.linkId));
       break;
 
     case 'delLink':
       // todo: raise error on all streams
       state.link.splice(item.linkId, 1);
-      state.message = delLinkMessage(item.linkId);
+      if(linkObserver != null)
+        linkObserver.next(delLinkMessage(item.linkId));
       break;
-
-    default:
-      return null;
   }
   return state;
 }
 
 function processSinkItem(state, item, linkOutMessageObserver) {
-  state.message = null;
   switch(item.what) {
     case 'createSink':
       const stream = sinkStream(item.observer);
@@ -117,15 +114,11 @@ function processSinkItem(state, item, linkOutMessageObserver) {
       state.link[item.linkId][item.streamId]
         .observer.error(item.error);
       break;
-
-    default:
-      return null;
   }
   return state;
 }
 
 function processSourceItem(state, item, factory, linkOutMessageObserver) {
-  state.message = null;
   switch(item.what) {
     case 'create':
       {%- for stream in streams %}
@@ -152,9 +145,6 @@ function processSourceItem(state, item, factory, linkOutMessageObserver) {
       }
       {%- endfor %}
       break;
-
-    default:
-      return null;
   }
   return state;
 }
@@ -187,15 +177,18 @@ function remuxLinkStreams(link$) {
 export function router(sink$, factory = {}) {
   let sinkRequestObserver = null;
   let linkOutMessageObserver = null;
+  let linkObserver = null;
 
   const sinkRequest$ = Observable.create( o => {
     sinkRequestObserver = o;
-
-    // todo cleanup function
   });
 
   const linkOutMessage$ = Observable.create( o => {
     linkOutMessageObserver = o;
+  });
+
+  const link$ = Observable.create( o => {
+    linkObserver = o;
   });
 
   const sinkControl = remuxLinkStreams(sink$)
@@ -228,39 +221,25 @@ export function router(sink$, factory = {}) {
 
   const engine$ = Observable.merge(sinkinCommand$, sinkinData$, sinkRequest$)
     .scan( (acc, i) => {
-      let updated_acc = processSinkItem(acc, i, linkOutMessageObserver);
-      if(updated_acc == null) {
-        updated_acc = processSourceItem(acc, i, factory, linkOutMessageObserver);
-        if(updated_acc == null) {
-          updated_acc = processLinkItem(acc, i, linkOutMessageObserver);
-          if(updated_acc == null)
-            updated_acc = acc;
-        }
-      }
-      return updated_acc;
+      acc = processSinkItem(acc, i, linkOutMessageObserver);
+      acc = processSourceItem(acc, i, factory, linkOutMessageObserver);
+      acc = processLinkItem(acc, i, linkObserver);
+      return acc;
     }, sinkEngine())
-    .map( i => i.message)
-    .filter(i => i != null);
+    .subscribe();
 
-  const engine = Observable.merge(engine$, linkOutMessage$)
-    .share()
-    .partition( i => (i.what === "addLink") || (i.what === "delLink"));
-
-  const link$ = engine[0];
-  const linkOut$ = engine[1]
+  const linkOut$ = linkOutMessage$
     .map( i => {
       return {
         "what": "data",
         "linkId": i.linkId,
         "data": frame(i.message.toJson())
       };
-    })
+    });
 
   return {
     "link": () => link$,
-    "linkData": () => {
-      return linkOut$;
-    }
+    "linkData": () => linkOut$
 
     {%- for stream in streams %}
     {%- if loop.first %}, {% endif%}
@@ -275,6 +254,7 @@ export function router(sink$, factory = {}) {
             [{%- for arg in stream.arg %}{{arg.identifier}}{% if not loop.last %}, {% endif%}{%- endfor %}]
           )
         );
+        console.log("counter 2");
 
         return () => {
           sinkRequestObserver.next(
