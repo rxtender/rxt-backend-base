@@ -133,7 +133,9 @@ function processSourceItem(state, item, factory, linkOutMessageObserver) {
         linkOutMessageObserver.next(linkMessage(item.linkId, ackMessage(item.streamId)));
         stream.subscribe(
           i => {
-            linkOutMessageObserver.next();
+            linkOutMessageObserver.next(linkMessage(
+              item.linkId,
+              nextMessage(item.streamId, i)));
           },
           e => {
             linkOutMessageObserver.error();
@@ -254,7 +256,6 @@ export function router(sink$, factory = {}) {
             [{%- for arg in stream.arg %}{{arg.identifier}}{% if not loop.last %}, {% endif%}{%- endfor %}]
           )
         );
-        console.log("counter 2");
 
         return () => {
           sinkRequestObserver.next(

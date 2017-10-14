@@ -36,21 +36,28 @@ function {{struct.identifier}}_serialize(inObj) {
 
   return JSON.stringify(inObj, [{%- for field in struct.field %}"{{field.identifier}}"{% if not loop.last %}, {% endif%}{%- endfor %}]);
 }
+{%- endfor %}
 
-function {{struct.identifier}}Message(obj) {
+{% for stream in streams %}
+
+export function {{stream.identifier}}NextMessage(streamId, obj) {
   let msg = {
-    'what': 'create',
+    'what': 'next',
+    'streamId': streamId,
     'item' : obj
   };
 
   msg.toJson = () => {
-    return JSON.stringify(msg, (k,v) => {
+    return JSON.stringify(msg, ['what', 'streamId', 'item']);
+    /*
+    return JSON.stringify(msg, function(k,v) {
       switch(k) {
-        case 'what': return v;
-        case 'item': return {{struct.identifier}}_serialize(obj);
+        case 'item': return {{stream.item_identifier}}_serialize(msg.item);
+        default:
+          return v;
       }
-      return undefined;
     });
+    */
   };
   return msg;
 }
@@ -126,6 +133,9 @@ function nextMessage(streamId, obj) {
     'item': obj
   };
 
+  msg.toJson = function() {
+    return JSON.stringify(msg);
+  };
   return msg;
 }
 
