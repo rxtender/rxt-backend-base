@@ -1,7 +1,7 @@
 
 {%- for struct in structs %}
 
-function {{struct.identifier}}({%- for field in struct.field %}{{field.identifier}} {% if not loop.last %},{% endif%} {%- endfor %}) {
+export function {{struct.identifier}}({%- for field in struct.field %}{{field.identifier}} {% if not loop.last %},{% endif%} {%- endfor %}) {
   const args = Array.from(arguments);
   if(args.length != {{struct.field|length}})
     throw new Error('bad number of argument');
@@ -10,56 +10,6 @@ function {{struct.identifier}}({%- for field in struct.field %}{{field.identifie
     "{{ field.identifier }}": {{ field.identifier }}{% if not loop.last %},{% endif%}
   {%- endfor %}
   };
-}
-
-function {{struct.identifier}}_deserialize(in_obj_repr) {
-  try {
-    const inObj = JSON.parse(in_obj_repr)
-
-    {%- for field in struct.field %}
-    if(inObj.{{ field.identifier }} == undefined)
-      return null;
-    {%- endfor %}
-
-    return {{struct.identifier}}({%- for field in struct.field %}inObj.{{field.identifier}}{% if not loop.last %}, {% endif%}{%- endfor %});
-  } catch(e) {
-    return null;
-  }
-
-}
-
-function {{struct.identifier}}_serialize(inObj) {
-  {%- for field in struct.field %}
-  if(inObj.{{ field.identifier }} == undefined)
-    return null;
-  {%- endfor %}
-
-  return JSON.stringify(inObj, [{%- for field in struct.field %}"{{field.identifier}}"{% if not loop.last %}, {% endif%}{%- endfor %}]);
-}
-{%- endfor %}
-
-{% for stream in streams %}
-
-export function {{stream.identifier}}NextMessage(streamId, obj) {
-  let msg = {
-    'what': 'next',
-    'streamId': streamId,
-    'item' : obj
-  };
-
-  msg.toJson = () => {
-    return JSON.stringify(msg, ['what', 'streamId', 'item']);
-    /*
-    return JSON.stringify(msg, function(k,v) {
-      switch(k) {
-        case 'item': return {{stream.item_identifier}}_serialize(msg.item);
-        default:
-          return v;
-      }
-    });
-    */
-  };
-  return msg;
 }
 
 {%- endfor %}
