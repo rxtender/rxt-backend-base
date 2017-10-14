@@ -139,9 +139,9 @@ function nextMessage(streamId, obj) {
   return msg;
 }
 
-function completedMessage(streamId) {
+function completeMessage(streamId) {
   let msg = {
-    'what': 'completed',
+    'what': 'complete',
     'streamId': streamId
   };
 
@@ -159,7 +159,7 @@ function errorMessage(streamId, obj) {
   };
 
   msg.toJson = function() {
-    return JSON.stringify(msg, ['what', 'streamId', 'message']);
+    return JSON.stringify(msg);
   };
   return msg;
 }
@@ -204,8 +204,8 @@ function msgFromJson(in_msg_json) {
   if(what == 'next') {
     out_msg = nextMessage(in_msg.streamId, in_msg.item);
   }
-  else if(what == 'completed') {
-    out_msg = completedMessage(in_msg.streamId);
+  else if(what == 'complete') {
+    out_msg = completeMessage(in_msg.streamId);
   }
   else if(what == 'error') {
     out_msg = errorMessage(in_msg.streamId, in_msg.message);

@@ -105,7 +105,7 @@ function processSinkItem(state, item, linkOutMessageObserver) {
         .observer.next(item.item);
       break;
 
-    case 'completed':
+    case 'complete':
       state.link[item.linkId][item.streamId]
         .observer.complete();
       break;
@@ -138,10 +138,14 @@ function processSourceItem(state, item, factory, linkOutMessageObserver) {
               nextMessage(item.streamId, i)));
           },
           e => {
-            linkOutMessageObserver.error();
+            linkOutMessageObserver.next(linkMessage(
+              item.linkId,
+              errorMessage(item.streamId, e)));
           },
           () => {
-            linkOutMessageObserver.complete();
+            linkOutMessageObserver.next(linkMessage(
+              item.linkId,
+              completeMessage(item.streamId)));
           }
         );
       }

@@ -121,7 +121,7 @@ describe('processing of', function() {
 });
 
 describe('processing of', function() {
-  describe('completed message', function() {
+  describe('complete message', function() {
     it('should call the complete callback', function() {
       let complete = false;
       let streamId = 0;
@@ -149,7 +149,7 @@ describe('processing of', function() {
       );
 
       linkSource$.next(frame(JSON.stringify({
-        "what": "completed", "streamId": streamId}))
+        "what": "complete", "streamId": streamId}))
       );
       assert.equal(complete, true);
     });
