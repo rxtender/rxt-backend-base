@@ -3,14 +3,14 @@
 
 var id = 0;
 
-function create{{stream.identifier}}Subscription(args, nextCbk, completedCbk, errorCbk) {
+function create{{stream.identifier}}Subscription(args, nextCbk, completeCbk, errorCbk) {
   return {
     'stream': "{{stream.identifier}}",
     'streamId': id++, // @bug: integer overflow
     'args': args,
     'observer': {
       'next': (i) => { nextCbk(i); },
-      'completed': () => { completedCbk(); },
+      'complete': () => { completeCbk(); },
       'error': (e) => {errorCbk(e); }
     }
   };
@@ -52,9 +52,9 @@ class Router {
         this.subscriptions[message.streamId]
         .observer.next(message.item);
         break;
-      case 'completed':
+      case 'complete':
         this.subscriptions[message.streamId]
-        .observer.completed();
+        .observer.complete();
         break;
       case 'error':
         this.subscriptions[message.streamId]
