@@ -101,9 +101,9 @@ class ItemNextMessage(Message):
     def serialize(self):
         return json.dumps(self.dict())
 
-class ItemCompletedMessage(Message):
+class ItemCompleteMessage(Message):
     def __init__(self, stream_id):
-        super().__init__('completed')
+        super().__init__('complete')
         self.stream_id = stream_id
 
     def dict(self):

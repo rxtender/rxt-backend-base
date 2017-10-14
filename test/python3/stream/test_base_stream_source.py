@@ -14,7 +14,7 @@ class TestFactory(object):
         self.created = False
         self.deleted = False
         self.forward_next = None
-        self.forward_completed = None
+        self.forward_complete = None
         self.forward_error = None
         return
 
@@ -22,9 +22,9 @@ class TestFactory(object):
         self.created = True
         return lambda n,c,e: self.subscribe_counter_stream(n, c, e), lambda: self.delete_counter_subscription()
 
-    def subscribe_counter_stream(self, next, completed, error):
+    def subscribe_counter_stream(self, next, complete, error):
         self.forward_next = next
-        self.forward_completed = completed
+        self.forward_complete = complete
         self.forward_error = error
         return lambda: self.delete_counter_subscription()
 
@@ -35,8 +35,8 @@ class TestFactory(object):
     def next(self, value):
         self.forward_next(value)
 
-    def completed(self):
-        self.forward_completed()
+    def complete(self):
+        self.forward_complete()
 
     def error(self, message):
         self.forward_error(message)
@@ -87,11 +87,11 @@ class BaseStreamTestCase(TestCase):
             json.loads('{\"streamId\": 42, "item": {"value": 72}, "what": "next"}'),
             json.loads(context.transport.buffer))
 
-    def test_completed(self):
+    def test_complete(self):
         context = TestContext(42)
-        context.factory.completed()
+        context.factory.complete()
         self.assertEqual(
-            json.loads('{\"streamId\": 42, "what": "completed"}'),
+            json.loads('{\"streamId\": 42, "what": "complete"}'),
             json.loads(context.transport.buffer))
 
     def test_error(self):

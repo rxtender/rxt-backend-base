@@ -39,7 +39,7 @@ class Router(object):
         self.ack_create(stream_id)
         subscribe(
             lambda item: self.{{stream.identifier}}_next(stream, item),
-            lambda: self.{{stream.identifier}}_completed(stream),
+            lambda: self.{{stream.identifier}}_complete(stream),
             lambda message: self.{{stream.identifier}}_error(stream, message)
         )
 
@@ -47,8 +47,8 @@ class Router(object):
         msg = ItemNextMessage(subscription.id, item)
         self.write_message(msg)
         return
-    def {{stream.identifier}}_completed(self, subscription):
-        msg = ItemCompletedMessage(subscription.id)
+    def {{stream.identifier}}_complete(self, subscription):
+        msg = ItemCompleteMessage(subscription.id)
         self.write_message(msg)
         return
     def {{stream.identifier}}_error(self, subscription, message):
