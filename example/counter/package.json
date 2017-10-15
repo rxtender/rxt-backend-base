@@ -5,7 +5,7 @@
   "license": "MIT",
   "main": "client.js",
   "scripts": {
-    "generate:counter": "rxtender --framing rxt_backend_base.es2015.framing.newline --serialization rxt_backend_base.es2015.serialization.json --stream rxt_backend_base.es2015.stream --stream rxt_backend_base.es2015_rxjs.stream --input counter.rxt --output counter_rxt.es6.js",
+    "generate:counter": "rxtender --framing rxt_backend_base.es2015.framing.newline --serialization rxt_backend_base.es2015.serialization.json --stream rxt_backend_base.es2015_rxjs.stream --input counter.rxt --output counter_rxt.es6.js",
     "build:counter": "npm run generate:counter && babel --presets es2015 counter_rxt.es6.js --out-file counter_rxt.js",
     "build:client": "npm run build:counter && babel --presets es2015 client.es6.js --out-file client.js",
     "build": "npm run build:client",

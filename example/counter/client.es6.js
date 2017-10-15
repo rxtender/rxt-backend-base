@@ -1,44 +1,87 @@
+import {Observable, Subject} from 'rxjs';
 import {
-  frame, unframe, Router,
-  createCounterObservable
+  router,
 } from './counter_rxt.js';
+import {Socket} from 'net';
 
-var net = require('net');
+let connection = [];
 
-var HOST = '127.0.0.1';
-var PORT = 9999;
+function createConnection(id, host, port) {
+  const state$ = Observable.create(stateObserver => {
+    let dataObserver = null;
+    const data$ = Observable.create(observer => {
+      dataObserver = observer;
+    });
 
-var client = new net.Socket();
+    connection[id] = new Socket();
+    connection[id].setEncoding('utf8');
+    connection[id].connect(port, host, function() {
+        console.log('CONNECTED TO: ' + host + ':' + port);
+        stateObserver.next({
+          "linkId": id,
+          "stream": data$
+        })
+    });
 
-var router = null;
-var context = '';
-client.connect(PORT, HOST, function() {
-    console.log('CONNECTED TO: ' + HOST + ':' + PORT);
-    router = new Router({"write": (d) => {
-      client.write(frame(d));
-    }});
+    connection[id].on('data', function(data) {
+      dataObserver.next(data);
+    });
 
-    console.log('creating observable');
-    createCounterObservable(router, 1, 10, 1)
-    .subscribe(
-      (i) => { console.log('tick: ' + i.value); },
-      (e) => { console.log('stream error'); },
-      () => {
-        console.log('completed');
-        process.exit();
-      }
-    );
-});
+    connection[id].on('close', function() {
+        dataObserver.complete();
+        stateObserver.complete();
+        connection.splice(id, 1);
+    });
+  });
 
-client.on('data', function(data) {
-    const result = unframe(context, data.toString());
-    context = result.context;
-    result.packets.forEach( (e) => {
-      router.onMessage(e);
+  return state$;
+}
+
+function tcpClient(sink$) {
+  sink$.subscribe( (i) => {
+    connection[i.linkId].write(i.data);
+  });
+
+  return {
+    "connect" : createConnection
+  };
+}
+
+function consoleDriver(sink$) {
+  sink$.subscribe( (i) => {
+    console.log('console: ' + i);
+  });
+}
+
+function main(sources) {
+  const linkRcv$ = sources.LINK.connect('counter', 'localhost', 9999);
+  const returnChannel$ = sources.ROUTER.linkData();
+  const console$ = sources.ROUTER.link()
+    .map( i => {
+      return sources.ROUTER.Counter(i.linkId, 1,10,1)
     })
+    .mergeAll()
+    .map( i => i.value);;
 
-});
+  return {
+   ROUTER: linkRcv$,
+   LINK: returnChannel$,
+   CONSOLE: console$
+  };
+}
 
-client.on('close', function() {
-    console.log('Connection closed');
-});
+const consoleProxy$ = new Subject();
+const routerProxy$ = new Subject();
+const linkProxy$ = new Subject();
+
+const sources = {
+  CONSOLE: consoleDriver(consoleProxy$),
+  ROUTER: router(routerProxy$),
+  LINK: tcpClient(linkProxy$)
+};
+
+const sinks = main(sources);
+
+sinks.ROUTER.subscribe(routerProxy$);
+sinks.LINK.subscribe(linkProxy$);
+sinks.CONSOLE.subscribe(consoleProxy$);
